@@ -2,10 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PHttp
 {
@@ -48,14 +45,23 @@ namespace PHttp
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine($"** Failed to load Assembly for FileInfo: {file.FullName}");
+                    Console.WriteLine("** Failed to load Assembly for FileInfo: {0}", file.FullName);
                     continue;
                 }
 
-                currentAssembly.GetTypes()
-                    .Where(t => t != typeof(IPHttpApplication) && typeof(IPHttpApplication).IsAssignableFrom(t)) //type cannot be IPHttpApplication, but has to be compatible with it.
-                    .ToList()
-                    .ForEach(x => instanceList.Add((IPHttpApplication)Activator.CreateInstance(x))); //instanciate and add to list of types.
+                var types = currentAssembly.GetTypes();
+                foreach(Type t in types)
+                {
+                    if(t != typeof(IPHttpApplication) && typeof(IPHttpApplication).IsAssignableFrom(t))
+                    {
+                        instanceList.Add((IPHttpApplication)Activator.CreateInstance(t));
+                    }
+                }
+
+                //currentAssembly.GetTypes()
+                //    .Where(t => t != typeof(IPHttpApplication) && typeof(IPHttpApplication).IsAssignableFrom(t)) //type cannot be IPHttpApplication, but has to be compatible with it.
+                //    .ToList()
+                //    .ForEach(x => instanceList.Add((IPHttpApplication)Activator.CreateInstance(x))); //instanciate and add to list of types.
             }
 
             Console.WriteLine("-- Apps Loading Complete!");
@@ -63,7 +69,7 @@ namespace PHttp
 
             foreach (var ins in instanceList)
             {
-                Console.Write($"   + Name: {ins.Name} | Start(): ");
+                Console.Write("   + Name: {0} | Start(): ", ins.Name);
                 ins.Start();
             }
 

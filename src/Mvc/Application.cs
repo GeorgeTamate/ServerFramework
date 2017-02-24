@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using PHttp.Application;
 
 namespace Mvc
@@ -24,7 +20,7 @@ namespace Mvc
 
         public string Name
         {
-            get { return this.ToString(); }
+            get { return ToString(); }
             set { Console.WriteLine("Application.Name: set yet to be implemented."); }
         }
     }
