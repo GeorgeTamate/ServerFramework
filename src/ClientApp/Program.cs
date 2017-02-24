@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.IO;
 using PHttp;
 
-namespace ConsoleApplication1
+namespace ClientApp
 {
     class Program
     {

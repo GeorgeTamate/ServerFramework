@@ -24,7 +24,7 @@ namespace Mvc
 
         public string Name
         {
-            get { return this.ToString(); }
+            get { return ToString(); }
             set { Console.WriteLine("Application.Name: set yet to be implemented."); }
         }
     }
