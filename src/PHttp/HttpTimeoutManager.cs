@@ -15,7 +15,7 @@ namespace PHttp
         public HttpTimeoutManager(HttpServer server)
         {
             if (server == null)
-                throw new ArgumentNullException(nameof(server));
+                throw new ArgumentNullException(server.ToString());
 
             ReadQueue = new TimeoutQueue(server.ReadTimeout);
             WriteQueue = new TimeoutQueue(server.WriteTimeout);
@@ -87,9 +87,9 @@ namespace PHttp
             public void Add(IAsyncResult asyncResult, IDisposable disposable)
             {
                 if (asyncResult == null)
-                    throw new ArgumentNullException(nameof(asyncResult));
+                    throw new ArgumentNullException(asyncResult.ToString());
                 if (disposable == null)
-                    throw new ArgumentNullException(nameof(disposable));
+                    throw new ArgumentNullException(disposable.ToString());
 
                 lock (_syncRoot)
                 {
@@ -118,7 +118,7 @@ namespace PHttp
             public TimeoutItem(long expires, IAsyncResult asyncResult, IDisposable disposable)
             {
                 if (asyncResult == null)
-                    throw new ArgumentNullException(nameof(asyncResult));
+                    throw new ArgumentNullException(asyncResult.ToString());
 
                 Expires = expires;
                 AsyncResult = asyncResult;
@@ -126,15 +126,15 @@ namespace PHttp
             }
 
             #region Properties
-            public long Expires { get; }
-            public IAsyncResult AsyncResult { get; }
-            public IDisposable Disposable { get; }
+            public long Expires { get; private set; }
+            public IAsyncResult AsyncResult { get; private set; }
+            public IDisposable Disposable { get; private set; }
             #endregion
         }
 
         #region Properties
-        public TimeoutQueue ReadQueue { get; }
-        public TimeoutQueue WriteQueue { get; }
+        public TimeoutQueue ReadQueue { get; private set; }
+        public TimeoutQueue WriteQueue { get; private set; }
         #endregion
     }
 }
