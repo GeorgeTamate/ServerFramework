@@ -7,10 +7,11 @@ namespace PHttp
 {
     internal class HttpTimeoutManager : IDisposable
     {
-        // Members
-        //
         private Thread _thread;
         private ManualResetEvent _closeEvent = new ManualResetEvent(false);
+
+        public TimeoutQueue ReadQueue { get; private set; }
+        public TimeoutQueue WriteQueue { get; private set; }
 
         public HttpTimeoutManager(HttpServer server)
         {
@@ -72,8 +73,6 @@ namespace PHttp
 
         public class TimeoutQueue
         {
-            // Members
-            //
             private readonly object _syncRoot = new object();
             private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
             private readonly long _timeout;
@@ -115,6 +114,10 @@ namespace PHttp
 
         public class TimeoutItem
         {
+            public long Expires { get; private set; }
+            public IAsyncResult AsyncResult { get; private set; }
+            public IDisposable Disposable { get; private set; }
+
             public TimeoutItem(long expires, IAsyncResult asyncResult, IDisposable disposable)
             {
                 if (asyncResult == null)
@@ -124,17 +127,6 @@ namespace PHttp
                 AsyncResult = asyncResult;
                 Disposable = disposable;
             }
-
-            #region Properties
-            public long Expires { get; private set; }
-            public IAsyncResult AsyncResult { get; private set; }
-            public IDisposable Disposable { get; private set; }
-            #endregion
         }
-
-        #region Properties
-        public TimeoutQueue ReadQueue { get; private set; }
-        public TimeoutQueue WriteQueue { get; private set; }
-        #endregion
     }
 }
