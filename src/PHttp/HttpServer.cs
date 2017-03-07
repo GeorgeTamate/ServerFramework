@@ -44,7 +44,7 @@ namespace PHttp
         {
             if (!_disposed)
             {
-                if (State == HttpServerState.Started)
+                if (_state == HttpServerState.Started)
                     Stop();
                 if (_clientsChangedEvent != null)
                 {

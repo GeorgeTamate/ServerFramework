@@ -41,24 +41,5 @@ namespace PHttp
 
             return HttpUtil.UriDecode(text, encoding);
         }
-
-        // Generated while finding out how HttpUtil will be defined.
-        private class HttpUtil
-        {
-            internal static string HtmlDecode(string value)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal static string HtmlEncode(string value)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal static string UriDecode(string text, Encoding encoding)
-            {
-                throw new NotImplementedException();
-            }
-        }
     }
 }
