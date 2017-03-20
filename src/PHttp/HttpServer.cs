@@ -126,7 +126,10 @@ namespace PHttp
 
         private void RegisterClient(HttpClient client)
         {
-            throw new NotImplementedException();
+            if (client == null)
+            {
+                throw new ArgumentNullException("HttpClient argument provided is null.");
+            }
         }
 
         #endregion

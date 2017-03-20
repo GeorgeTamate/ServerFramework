@@ -30,7 +30,7 @@ namespace PHttp
         private bool _disposed;
         private ClientState _state;
         private HttpContext _context;
-        private readonly byte[] _writeBUffer;
+        private readonly byte[] _writeBuffer;
         private NetworkStream _stream;
         private MemoryStream _writeStream;
         private bool _errored;
