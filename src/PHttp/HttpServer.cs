@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -13,6 +15,8 @@ namespace PHttp
         private AutoResetEvent _clientsChangedEvent = new AutoResetEvent(false);
         private bool _disposed = false;
         private HttpServerState _state = HttpServerState.Stopped;
+        private object _syncLock = new object();
+        private Dictionary<HttpClient, bool> _clients = new Dictionary<HttpClient, bool>();
 
         #endregion
 
@@ -83,14 +87,26 @@ namespace PHttp
             catch (Exception e)
             {
                 State = HttpServerState.Stopped;
-                Console.WriteLine("** The Server failed to start. | Exception: " + e.Message);
-                throw new PHttpException("The Server failed to start.");
+                Console.WriteLine("** Failed to start HTTP server. | Exception: " + e.Message);
+                throw new PHttpException("Failed to start HTTP server.");
             }
         }
 
         public void Stop()
         {
-            throw new NotImplementedException();
+            try
+            {
+                VerifyState(HttpServerState.Started);
+                State = HttpServerState.Stopping;
+                _listener.Stop();
+                StopClients();
+            }
+            catch(Exception e)
+            {
+                State = HttpServerState.Stopped;
+                Console.WriteLine("** Failed to stop HTTP server. | Exception: " + e.Message);
+                throw new PHttpException("Failed to stop HTTP server.");
+            }
         }
 
         #endregion
@@ -107,7 +123,65 @@ namespace PHttp
 
         private void StopClients()
         {
-            throw new NotImplementedException();
+            var shutdownStarted = DateTime.Now;
+            bool forceShutdown = false;
+            // Clients that are waiting for new requests are closed.
+
+            List<HttpClient> clients;
+            lock (_syncLock)
+            {
+                clients = new List<HttpClient>(_clients.Keys);
+            }
+
+            foreach (var client in clients)
+            {
+                client.RequestClose();
+            }
+
+            // First give all clients a chance to complete their running requests.
+            while (true)
+            {
+                lock (_syncLock)
+                {
+                    if (_clients.Count == 0)
+                        break;
+                }
+
+                var shutdownRunning = DateTime.Now - shutdownStarted;
+
+                if (shutdownRunning >= ShutdownTimeout)
+                {
+                    forceShutdown = true;
+                    break;
+                }
+                _clientsChangedEvent.WaitOne(ShutdownTimeout - shutdownRunning);
+            }
+
+            if (!forceShutdown)
+                return;
+
+            // If there are still clients running after the timeout, their
+            // connections will be forcibly closed.
+            lock (_syncLock)
+            {
+                clients = new List<HttpClient>(_clients.Keys);
+            }
+
+            foreach (var client in clients)
+            {
+                client.ForceClose();
+            }
+
+            // Wait for the registered clients to be cleared.
+            while (true)
+            {
+                lock (_syncLock)
+                {
+                    if (_clients.Count == 0)
+                        break;
+                }
+                _clientsChangedEvent.WaitOne();
+            }
         }
 
         private void BeginAcceptTcpClient()
@@ -121,7 +195,33 @@ namespace PHttp
 
         private void AcceptTcpClientCallback(IAsyncResult asyncResult)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var listener = _listener;
+
+                if (listener == null)
+                {
+                    return;
+                }
+
+                var tcpClient = listener.EndAcceptTcpClient(asyncResult);
+
+                if (_state == HttpServerState.Stopped)
+                {
+                    tcpClient.Close();
+                }
+
+                var httpClient = new HttpClient(ReadBufferSize, WriteBufferSize);
+
+                RegisterClient(httpClient);
+                httpClient.BeginRequest();
+                BeginAcceptTcpClient();
+            }
+            catch (ObjectDisposedException) { }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
 
         private void RegisterClient(HttpClient client)
@@ -129,6 +229,12 @@ namespace PHttp
             if (client == null)
             {
                 throw new ArgumentNullException("HttpClient argument provided is null.");
+            }
+
+            lock (_syncLock)
+            {
+                _clients.Add(client, true);
+                _clientsChangedEvent.Set();
             }
         }
 
@@ -138,8 +244,36 @@ namespace PHttp
 
         internal void UnregisterClient(HttpClient client)
         {
-            throw new NotImplementedException();
+            if (client == null)
+            {
+                throw new ArgumentNullException("HttpClient argument provided is null.");
+            }
+
+            lock (_syncLock)
+            {
+                Debug.Assert(_clients.ContainsKey(client));
+                _clients.Remove(client);
+                _clientsChangedEvent.Set();
+            }
         }
+
+        internal void RaiseRequest(HttpContext context)
+        {
+            if (context == null)
+                throw new ArgumentNullException("context");
+            ////OnRequestReceived(new HttpRequestEventArgs(context));
+        }
+
+        internal bool RaiseUnhandledException(HttpContext context, Exception exception)
+        {
+            if (context == null)
+                throw new ArgumentNullException("context");
+            var e = new HttpExceptionEventArgs(context, exception);
+            ////OnUnhandledException(e);
+            return e.Handled;
+        }
+
+
 
         #endregion
 
@@ -166,8 +300,9 @@ namespace PHttp
             {
                 if (_state != value)
                 {
+                    var prevState = _state;
                     _state = value;
-                    OnChangedState(EventArgs.Empty);
+                    OnChangedState(new StateChangedEventArgs(prevState, _state));
                 }
             }
         }

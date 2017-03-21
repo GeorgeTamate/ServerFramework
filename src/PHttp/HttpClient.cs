@@ -41,14 +41,21 @@ namespace PHttp
 
         #region Constructors
 
-        public HttpClient()
+        public HttpClient(int readBufferSize, int writeBufferSize)
         {
-
+            ReadBuffer = new HttpReadBuffer(readBufferSize);
+            _writeBuffer = new byte[writeBufferSize];
         }
 
         #endregion
 
         #region Public Methods
+
+        public void BeginRequest()
+        {
+            Reset();
+            BeginRead();
+        }
 
         public void Dispose()
         {
