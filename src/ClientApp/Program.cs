@@ -2,8 +2,8 @@
 using System.Configuration;
 using PHttp;
 using System.IO;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ClientApp
 {
@@ -17,8 +17,9 @@ namespace ClientApp
             var startup = new Startup(path);
             startup.LoadApps();
 
-            Console.WriteLine("Press any key to start server...");//
-            Console.ReadKey();//
+            //Console.WriteLine("Press any key to start server...");//
+            //Console.ReadKey();//
+            Console.WriteLine();
 
             //////////////////////////////////////////////////////////////////
 
@@ -36,17 +37,63 @@ namespace ClientApp
                     // The response must be written to e.Response.OutputStream.
                     // When writing text, a StreamWriter can be used.
 
-                    using (var writer = new StreamWriter(e.Response.OutputStream))
+                    //using (var writer = new StreamWriter(e.Response.OutputStream))
+                    //{
+                    //    writer.Write("Hello world!");
+                    //}
+
+                    string filePath = ConfigurationManager.AppSettings["FilesDir"].ToString() + e.Request.Path;
+                    string resourcePath;
+
+                    if (File.Exists(filePath)) // When requested file exists
                     {
-                        Console.WriteLine("++" + ConfigurationManager.AppSettings["FilesDir"].ToString() + e.Request.Path);
-
-                        if (File.Exists(ConfigurationManager.AppSettings["FilesDir"].ToString() + e.Request.Path))
+                        using (var stream = File.Open(filePath, FileMode.Open))
                         {
-                            Console.WriteLine("++ FILE FOUND");
-                        }
-                        
+                            e.Response.ContentType = GetMimeType(Path.GetExtension(e.Request.Path));
+                            byte[] buffer = new byte[4096];
+                            int read;
 
-                        writer.Write("Hello world!");
+                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                            {
+                                e.Response.OutputStream.Write(buffer, 0, read);
+                            }
+                        }
+                    }
+                    else if (e.Request.Path.Equals("/") || e.Request.Path.Equals("/home")) // Displays home page
+                    {
+                        resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/Home.html";
+                        using (var stream = File.Open(resourcePath, FileMode.Open))
+                        {
+                            e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
+                            byte[] buffer = new byte[4096];
+                            int read;
+
+                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                            {
+                                e.Response.OutputStream.Write(buffer, 0, read);
+                            }
+                        }
+                    }
+                    else if (e.Request.Path.Equals("/favicon.ico")) // when favicon.ico request comes up
+                    {
+                        // Do nothing
+                    }
+                    else // When nothing else worked (resource not found)
+                    {
+                        resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/NotFound.html";
+                        using (var stream = File.Open(resourcePath, FileMode.Open))
+                        {
+                            e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
+                            e.Response.StatusCode = 404;
+                            e.Response.StatusDescription = "Not Found";
+                            byte[] buffer = new byte[4096];
+                            int read;
+
+                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                            {
+                                e.Response.OutputStream.Write(buffer, 0, read);
+                            }
+                        }
                     }
 
 
@@ -75,18 +122,18 @@ namespace ClientApp
 
                 // Start the default web browser.
 
-                Process.Start(String.Format("http://{0}/home", server.EndPoint));
+                //Process.Start(String.Format("http://{0}/", server.EndPoint));
 
-                Console.WriteLine("Press any key to stop server...");
-                Console.ReadKey();
+                //Console.WriteLine("Press any key to stop server...");
+                //Console.ReadKey();
 
-                // When the HttpServer is disposed, all opened connections
-                // are automatically closed.
+                //// When the HttpServer is disposed, all opened connections
+                //// are automatically closed.
 
-                server.Stop();
+                //server.Stop();
 
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
+                //Console.WriteLine("Press any key to exit...");
+                //Console.ReadKey();
             }
         }
 
