@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -41,10 +42,25 @@ namespace PHttp
 
         #region Constructors
 
-        public HttpClient(int readBufferSize, int writeBufferSize)
+        public HttpClient(HttpServer httpServer, TcpClient tcpClient)
         {
-            ReadBuffer = new HttpReadBuffer(readBufferSize);
-            _writeBuffer = new byte[writeBufferSize];
+            if (httpServer == null)
+            {
+                throw new ArgumentNullException(httpServer.ToString());
+            }
+
+            if (tcpClient == null)
+            {
+                throw new ArgumentNullException(tcpClient.ToString());
+            }
+
+            Server = httpServer;
+            TcpClient = tcpClient;
+
+            ReadBuffer = new HttpReadBuffer(httpServer.ReadBufferSize);
+            _writeBuffer = new byte[httpServer.WriteBufferSize];
+
+            _stream = TcpClient.GetStream();
         }
 
         #endregion
@@ -103,7 +119,11 @@ namespace PHttp
 
         public void ExecuteRequest()
         {
-            // Yet to be implemented.
+            _context = new HttpContext(this);
+            // Log.Debug(String.Format("Accepted request '{0}'", _context.Request.RawUrl));
+            Console.WriteLine(String.Format("-- HttpClient ExecuteRequest | Accepted request: '{0}'", _context.Request.RawUrl));
+            Server.RaiseRequest(_context);
+            WriteResponseHeaders();
         }
 
         #endregion
@@ -125,6 +145,7 @@ namespace PHttp
             }
             catch (Exception)
             {
+                Console.WriteLine("** HttpClient Exception | BeginRead failed");
                 Dispose();
             }
         }
@@ -151,17 +172,75 @@ namespace PHttp
             }
             catch (ObjectDisposedException)
             {
+                Console.WriteLine("** HttpClient Exception | Failed to read");
                 Dispose();
             }
             catch (Exception ex)
             {
+                Console.WriteLine("** HttpClient Exception | Failed to read from the HTTP connection");
                 ProcessException(ex);
             }
         }
 
-        private void ProcessException(Exception ex)
+        private void ProcessException(Exception exception)
         {
-            // Yet to be implemented.
+            if (_disposed)
+                return;
+
+            _errored = true;
+
+            // If there is no request available, the error didn't occur as part
+            // of a request (e.g. the client closed the connection). Just close
+            // the channel in that case.
+
+            if (Request == null)
+            {
+                Dispose();
+                return;
+            }
+
+            try
+            {
+                if (_context == null)
+                    _context = new HttpContext(this);
+
+                _context.Response.Status = "500 Internal Server Error";
+
+                bool handled;
+
+                try
+                {
+                    handled = Server.RaiseUnhandledException(_context, exception);
+                }
+                catch
+                {
+                    handled = false;
+                }
+
+                if (!handled && _context.Response.OutputStream.CanWrite)
+                {
+                    string resourceName = GetType().Namespace + ".Resources.InternalServerError.html";
+
+                    using (var stream = GetType().Assembly.GetManifestResourceStream(resourceName))
+                    {
+                        byte[] buffer = new byte[4096];
+                        int read;
+
+                        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                        {
+                            _context.Response.OutputStream.Write(buffer, 0, read);
+                        }
+                    }
+                }
+
+                WriteResponseHeaders();
+            }
+            catch (Exception ex)
+            {
+                // Log.Info("Failed to process internal server error response", ex);
+                Console.WriteLine("** HttpClient Exception | Failed to process internal server error response: {0}", ex);
+                Dispose();
+            }
         }
 
         private void ProcessReadBuffer()
@@ -191,7 +270,7 @@ namespace PHttp
 
         private void ProcessProlog()
         {
-            var line = ReadBuffer.ReadLine();
+            string line = ReadBuffer.ReadLine();
             if (line == null)
             {
                 return;
@@ -378,8 +457,205 @@ namespace PHttp
             _writeStream = new MemoryStream();
             _writeStream.Write(bytes, 0, bytes.Length);
             _writeStream.Position = 0;
-            //BeginWrite();
+            BeginWrite();
         }
+
+        private void BeginWrite()
+        {
+            try
+            {
+                // Copy the next part from the write stream.
+
+                int read = _writeStream.Read(_writeBuffer, 0, _writeBuffer.Length);
+
+                Server.TimeoutManager.WriteQueue.Add(
+                    _stream.BeginWrite(_writeBuffer, 0, read, WriteCallback, null),
+                    this
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("** HttpClient Exception | BeginWrite failed: {0}", ex);
+                Dispose();
+            }
+        }
+
+        private void WriteCallback(IAsyncResult asyncResult)
+        {
+            if (_disposed)
+                return;
+
+            try
+            {
+                _stream.EndWrite(asyncResult);
+
+                if (_writeStream != null && _writeStream.Length != _writeStream.Position)
+                {
+                    // Continue writing from the write stream.
+
+                    BeginWrite();
+                }
+                else
+                {
+                    if (_writeStream != null)
+                    {
+                        _writeStream.Dispose();
+                        _writeStream = null;
+                    }
+
+                    switch (_state)
+                    {
+                        case ClientState.WritingHeaders:
+                            WriteResponseContent();
+                            break;
+
+                        case ClientState.WritingContent:
+                            ProcessRequestCompleted();
+                            break;
+
+                        default:
+                            Debug.Assert(_state != ClientState.Closed);
+
+                            if (ReadBuffer.DataAvailable)
+                            {
+                                try
+                                {
+                                    ProcessReadBuffer();
+                                }
+                                catch (Exception ex)
+                                {
+                                    ProcessException(ex);
+                                }
+                            }
+                            else
+                            {
+                                BeginRead();
+                            }
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log.Info("Failed to write", ex);
+                Console.WriteLine("** HttpClient Exception | Failed to write: {0}", ex);
+                Dispose();
+            }
+        }
+
+        private void WriteResponseHeaders()
+        {
+            var headers = BuildResponseHeaders();
+
+            if (_writeStream != null)
+                _writeStream.Dispose();
+
+            _writeStream = new MemoryStream(headers);
+
+            _state = ClientState.WritingHeaders;
+
+            BeginWrite();
+        }
+
+        private byte[] BuildResponseHeaders()
+        {
+            var response = _context.Response;
+            var sb = new StringBuilder();
+
+            // Write the prolog.
+
+            sb.Append(Protocol);
+            sb.Append(' ');
+            sb.Append(response.StatusCode);
+
+            if (!String.IsNullOrEmpty(response.StatusDescription))
+            {
+                sb.Append(' ');
+                sb.Append(response.StatusDescription);
+            }
+
+            sb.Append("\r\n");
+
+            // Write all headers provided by Response.
+
+            if (!String.IsNullOrEmpty(response.CacheControl))
+                WriteHeader(sb, "Cache-Control", response.CacheControl);
+
+            if (!String.IsNullOrEmpty(response.ContentType))
+            {
+                string contentType = response.ContentType;
+
+                if (!String.IsNullOrEmpty(response.CharSet))
+                    contentType += "; charset=" + response.CharSet;
+
+                WriteHeader(sb, "Content-Type", contentType);
+            }
+
+            WriteHeader(sb, "Expires", response.ExpiresAbsolute.ToString("R"));
+
+            if (!String.IsNullOrEmpty(response.RedirectLocation))
+                WriteHeader(sb, "Location", response.RedirectLocation);
+
+            // Write the remainder of the headers.
+
+            foreach (string key in response.Headers.AllKeys)
+            {
+                WriteHeader(sb, key, response.Headers[key]);
+            }
+
+            // Write the content length (we override custom headers for this).
+
+            WriteHeader(sb, "Content-Length", response.OutputStream.BaseStream.Length.ToString(CultureInfo.InvariantCulture));
+
+            for (int i = 0; i < response.Cookies.Count; i++)
+            {
+                WriteHeader(sb, "Set-Cookie", response.Cookies[i].GetHeaderValue());
+            }
+
+            sb.Append("\r\n");
+
+            return response.HeadersEncoding.GetBytes(sb.ToString());
+        }
+
+        private void WriteHeader(StringBuilder sb, string key, string value)
+        {
+            sb.Append(key);
+            sb.Append(": ");
+            sb.Append(value);
+            sb.Append("\r\n");
+        }
+
+        private void WriteResponseContent()
+        {
+            if (_writeStream != null)
+                _writeStream.Dispose();
+
+            _writeStream = _context.Response.OutputStream.BaseStream;
+            _writeStream.Position = 0;
+
+            _state = ClientState.WritingContent;
+
+            BeginWrite();
+        }
+
+        private void ProcessRequestCompleted()
+        {
+            string connectionHeader;
+
+            // Do not accept new requests when the server is stopping.
+
+            if (
+                !_errored &&
+                Server.State == HttpServerState.Started &&
+                Headers.TryGetValue("Connection", out connectionHeader) &&
+                String.Equals(connectionHeader, "keep-alive", StringComparison.OrdinalIgnoreCase)
+            )
+                BeginRequest();
+            else
+                Dispose();
+        }
+
+
 
         #endregion
 

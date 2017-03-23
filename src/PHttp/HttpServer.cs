@@ -15,8 +15,8 @@ namespace PHttp
         private AutoResetEvent _clientsChangedEvent = new AutoResetEvent(false);
         private bool _disposed = false;
         private HttpServerState _state = HttpServerState.Stopped;
-        private object _syncLock = new object();
-        private Dictionary<HttpClient, bool> _clients = new Dictionary<HttpClient, bool>();
+        private readonly object _syncLock = new object();
+        private /*readonly*/ Dictionary<HttpClient, bool> _clients = new Dictionary<HttpClient, bool>();
 
         #endregion
 
@@ -81,31 +81,39 @@ namespace PHttp
                 _listener = listener;
                 ServerUtility = new HttpServerUtility();
                 Console.WriteLine("-- Server Running at EndPoint {0}:{1}", EndPoint.Address, EndPoint.Port);
-                State = HttpServerState.Started;
-                BeginAcceptTcpClient();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
                 State = HttpServerState.Stopped;
-                Console.WriteLine("** Failed to start HTTP server. | Exception: " + e.Message);
+                Console.WriteLine("** Failed to start HTTP server. | Exception: " + ex.Message);
                 throw new PHttpException("Failed to start HTTP server.");
             }
+            State = HttpServerState.Started;
+            BeginAcceptTcpClient();
         }
 
         public void Stop()
         {
+            VerifyState(HttpServerState.Started);
+            Console.WriteLine("-- Stopping HTTP server");
+            State = HttpServerState.Stopping;
+
             try
             {
-                VerifyState(HttpServerState.Started);
-                State = HttpServerState.Stopping;
                 _listener.Stop();
                 StopClients();
             }
-            catch(Exception e)
+            catch (Exception ex)
             {
                 State = HttpServerState.Stopped;
-                Console.WriteLine("** Failed to stop HTTP server. | Exception: " + e.Message);
+                Console.WriteLine("** Failed to stop HTTP server. | Exception: {0}", ex.Message);
                 throw new PHttpException("Failed to stop HTTP server.");
+            }
+            finally
+            {
+                _listener = null;
+                State = HttpServerState.Stopped;
+                Console.WriteLine("-- Stopped HTTP server");
             }
         }
 
@@ -128,6 +136,7 @@ namespace PHttp
             // Clients that are waiting for new requests are closed.
 
             List<HttpClient> clients;
+
             lock (_syncLock)
             {
                 clients = new List<HttpClient>(_clients.Keys);
@@ -206,12 +215,13 @@ namespace PHttp
 
                 var tcpClient = listener.EndAcceptTcpClient(asyncResult);
 
-                if (_state == HttpServerState.Stopped)
+                if (_state != HttpServerState.Started)
                 {
                     tcpClient.Close();
+                    return;
                 }
 
-                var httpClient = new HttpClient(ReadBufferSize, WriteBufferSize);
+                var httpClient = new HttpClient(this, tcpClient);
 
                 RegisterClient(httpClient);
                 httpClient.BeginRequest();
@@ -220,7 +230,7 @@ namespace PHttp
             catch (ObjectDisposedException) { }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine("** HttpServer Exception | Failed to accept TCP client: {0}", ex.ToString());
             }
         }
 
@@ -261,7 +271,7 @@ namespace PHttp
         {
             if (context == null)
                 throw new ArgumentNullException("context");
-            ////OnRequestReceived(new HttpRequestEventArgs(context));
+            OnRequestReceived(new HttpRequestEventArgs(context));
         }
 
         internal bool RaiseUnhandledException(HttpContext context, Exception exception)
@@ -269,7 +279,7 @@ namespace PHttp
             if (context == null)
                 throw new ArgumentNullException("context");
             var e = new HttpExceptionEventArgs(context, exception);
-            ////OnUnhandledException(e);
+            OnUnhandledException(e);
             return e.Handled;
         }
 
@@ -280,13 +290,29 @@ namespace PHttp
         #region Events and Handlers
 
         public event EventHandler StateChanged;
-        protected virtual void OnChangedState(EventArgs args)
+        protected virtual void OnChangedState(StateChangedEventArgs args)
         {
             var ev = StateChanged;
             if (ev != null)
             {
                 ev(this, args);
             }
+        }
+
+        public event HttpRequestEventHandler RequestReceived;
+        protected virtual void OnRequestReceived(HttpRequestEventArgs e)
+        {
+            var ev = RequestReceived;
+            if (ev != null)
+                ev(this, e);
+        }
+
+        public event HttpExceptionEventHandler UnhandledException;
+        protected virtual void OnUnhandledException(HttpExceptionEventArgs e)
+        {
+            var ev = UnhandledException;
+            if (ev != null)
+                ev(this, e);
         }
 
         #endregion
@@ -296,7 +322,7 @@ namespace PHttp
         public HttpServerState State
         {
             get { return _state; }
-            set
+            private set
             {
                 if (_state != value)
                 {
@@ -309,7 +335,7 @@ namespace PHttp
 
         public int Port { get; private set; }
 
-        public IPEndPoint EndPoint { get; private set; }
+        public IPEndPoint EndPoint { get; set; }
 
         public int ReadBufferSize { get; set; }
 
