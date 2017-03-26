@@ -17,11 +17,13 @@ namespace ClientApp
             var startup = new Startup(path);
             startup.LoadApps();
 
-            //Console.WriteLine("Press any key to start server...");//
-            //Console.ReadKey();//
-            Console.WriteLine();
+            Console.WriteLine("Press any key to start server...");//
+            Console.ReadKey();//
+            //Console.WriteLine();
 
             //////////////////////////////////////////////////////////////////
+
+            PHttpConfigManager config = new PHttpConfigManager();
 
             int port = 8085;
 
@@ -124,16 +126,16 @@ namespace ClientApp
 
                 //Process.Start(String.Format("http://{0}/", server.EndPoint));
 
-                //Console.WriteLine("Press any key to stop server...");
-                //Console.ReadKey();
+                Console.WriteLine("Press any key to stop server...");
+                Console.ReadKey();
 
                 //// When the HttpServer is disposed, all opened connections
                 //// are automatically closed.
 
-                //server.Stop();
+                server.Stop();
 
-                //Console.WriteLine("Press any key to exit...");
-                //Console.ReadKey();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
             }
         }
 
