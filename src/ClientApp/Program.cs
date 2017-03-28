@@ -25,9 +25,7 @@ namespace ClientApp
 
             PHttpConfigManager config = new PHttpConfigManager();
 
-            int port = 8085;
-
-            using (var server = new HttpServer(port)) //TODO 
+            using (var server = new HttpServer(config.Port)) //TODO 
             {
                 #region Request Received
 
@@ -46,58 +44,99 @@ namespace ClientApp
 
                     string filePath = ConfigurationManager.AppSettings["FilesDir"].ToString() + e.Request.Path;
                     string resourcePath;
+                    string responseStr;
+                    string metaSection;
 
-                    if (File.Exists(filePath)) // When requested file exists
+                    if (!e.Request.Path.Equals("/favicon.ico")) // when not favicon.ico
                     {
-                        using (var stream = File.Open(filePath, FileMode.Open))
-                        {
-                            e.Response.ContentType = GetMimeType(Path.GetExtension(e.Request.Path));
-                            byte[] buffer = new byte[4096];
-                            int read;
+                        responseStr = startup.CallApp(config, e.Request.Path);
 
-                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                        if (responseStr != null)
+                        {
+                            
+                            using (var writer = new StreamWriter(e.Response.OutputStream))
                             {
-                                e.Response.OutputStream.Write(buffer, 0, read);
+                                metaSection = responseStr.Split(';')[0];
+                                responseStr = responseStr.Remove(0, metaSection.Length + 1);
+                                e.Response.ContentType = GetMimeType(Path.GetExtension(metaSection.Split('/')[0]));
+                                e.Response.StatusCode = int.Parse(metaSection.Split('/')[1]);
+                                e.Response.StatusDescription = metaSection.Split('/')[2];
+
+                                writer.Write(responseStr);
+                            }
+                        }
+                        else // When nothing else worked (resource not found)
+                        {
+                            resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/NotFound.html";
+                            using (var stream = File.Open(resourcePath, FileMode.Open))
+                            {
+                                e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
+                                e.Response.StatusCode = 404;
+                                e.Response.StatusDescription = "Not Found";
+                                byte[] buffer = new byte[4096];
+                                int read;
+
+                                while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                                {
+                                    e.Response.OutputStream.Write(buffer, 0, read);
+                                }
                             }
                         }
                     }
-                    else if (e.Request.Path.Equals("/") || e.Request.Path.Equals("/home")) // Displays home page
-                    {
-                        resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/Home.html";
-                        using (var stream = File.Open(resourcePath, FileMode.Open))
-                        {
-                            e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
-                            byte[] buffer = new byte[4096];
-                            int read;
+                    
 
-                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
-                            {
-                                e.Response.OutputStream.Write(buffer, 0, read);
-                            }
-                        }
-                    }
-                    else if (e.Request.Path.Equals("/favicon.ico")) // when favicon.ico request comes up
-                    {
-                        // Do nothing
-                    }
-                    else // When nothing else worked (resource not found)
-                    {
-                        resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/NotFound.html";
-                        using (var stream = File.Open(resourcePath, FileMode.Open))
-                        {
-                            e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
-                            e.Response.StatusCode = 404;
-                            e.Response.StatusDescription = "Not Found";
-                            byte[] buffer = new byte[4096];
-                            int read;
+                    #region old way
+                    //if (File.Exists(filePath)) // When requested file exists
+                    //{
+                    //    using (var stream = File.Open(filePath, FileMode.Open))
+                    //    {
+                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(e.Request.Path));
+                    //        byte[] buffer = new byte[4096];
+                    //        int read;
 
-                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
-                            {
-                                e.Response.OutputStream.Write(buffer, 0, read);
-                            }
-                        }
-                    }
+                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                    //        {
+                    //            e.Response.OutputStream.Write(buffer, 0, read);
+                    //        }
+                    //    }
+                    //}
+                    //else if (e.Request.Path.Equals("/") || e.Request.Path.Equals("/home")) // Displays home page
+                    //{
+                    //    resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/Home.html";
+                    //    using (var stream = File.Open(resourcePath, FileMode.Open))
+                    //    {
+                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
+                    //        byte[] buffer = new byte[4096];
+                    //        int read;
 
+                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                    //        {
+                    //            e.Response.OutputStream.Write(buffer, 0, read);
+                    //        }
+                    //    }
+                    //}
+                    //else if (e.Request.Path.Equals("/favicon.ico")) // when favicon.ico request comes up
+                    //{
+                    //    // Do nothing
+                    //}
+                    //else // When nothing else worked (resource not found)
+                    //{
+                    //    resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/NotFound.html";
+                    //    using (var stream = File.Open(resourcePath, FileMode.Open))
+                    //    {
+                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
+                    //        e.Response.StatusCode = 404;
+                    //        e.Response.StatusDescription = "Not Found";
+                    //        byte[] buffer = new byte[4096];
+                    //        int read;
+
+                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                    //        {
+                    //            e.Response.OutputStream.Write(buffer, 0, read);
+                    //        }
+                    //    }
+                    //}
+                    #endregion
 
                 };
 
@@ -720,7 +759,7 @@ namespace ClientApp
         {
             if (extension == null)
             {
-                throw new ArgumentNullException(nameof(extension));
+                throw new ArgumentNullException(extension.ToString());
             }
 
             if (!extension.StartsWith("."))

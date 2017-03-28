@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.IO;
 using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions;
 
 namespace PHttp
 {
@@ -17,18 +16,8 @@ namespace PHttp
         public Dictionary<int, string> ErrorPages;
     }
 
-    //public class PartialConfig
-    //{
-    //    public List<string> DefaultDocument { get; set; }
-    //    public int Port { get; set; }
-    //}
-
     public class PHttpConfigManager
     {
-        private Dictionary<int, string> _errorPages = new Dictionary<int, string>();
-        private List<Site> _sites = new List<Site>();
-        private int _port;
-        private List<string> _defaultDocument = new List<string>();
         private string _path;
 
         public PHttpConfigManager() : 
@@ -44,34 +33,35 @@ namespace PHttp
             }
 
             _path = configFilePath;
+            DefaultDocument = new List<string>();
+            ErrorPages = new Dictionary<int, string>();
+            Sites = new List<Site>();
             Init();
         }
 
         private void Init()
         {
-            //PartialConfig config = JsonConvert.DeserializeObject<PartialConfig>(File.ReadAllText(_path));
-            //_port = config.Port;
-            //_defaultDocument = config.DefaultDocument;
-
-
             // Getting general JSON string from file
             JObject configJson = JsonConvert.DeserializeObject(File.ReadAllText(_path)) as JObject;
 
             // Assigning port from JSON
-            _port = int.Parse(configJson["port"].ToString());
+            Port = int.Parse(configJson["port"].ToString());
 
             // Populating defaultDocument List
             foreach (var document in configJson["defaultDocument"] as JArray)
-                _defaultDocument.Add(document.ToString());
+                DefaultDocument.Add(document.ToString());
 
             // Populating errorPages Dictionary
+            JProperty property;
             foreach (var token in configJson["errorPages"] as JArray)
-                _errorPages.Add(int.Parse(Regex.Match(token.First.ToString().Split(':')[0], @"\d+").Value), token.First.First.ToString());
+            {
+                property = token.First.Value<JProperty>();
+                ErrorPages.Add(int.Parse(property.Name), property.Value.ToString());
+            }
 
             // Populatin sites Struct List
             Site site = new Site();
-            JArray sitesJson = configJson["sites"] as JArray;
-            foreach (var token in sitesJson)
+            foreach (var token in configJson["sites"] as JArray)
             {
                 site.DefaultDocument = new List<string>();
                 site.ErrorPages = new Dictionary<int, string>();
@@ -84,29 +74,41 @@ namespace PHttp
                     site.DefaultDocument.Add(document.ToString());
 
                 foreach (var pages in token["errorPages"] as JArray)
-                    site.ErrorPages.Add(int.Parse(Regex.Match(pages.First.ToString().Split(':')[0], @"\d+").Value), pages.First.First.ToString());
-
-                _sites.Add(site);
+                {
+                    property = pages.First.Value<JProperty>();
+                    site.ErrorPages.Add(int.Parse(property.Name), property.Value.ToString());
+                }
+                
+                Sites.Add(site);
             }
 
             //Printing Config
-            Console.WriteLine("Port: {0}", _port);
-            foreach (var document in _defaultDocument)
+            Console.WriteLine("Port: {0}", Port);
+            foreach (var document in DefaultDocument)
                 Console.WriteLine("SiteDocument: {0}", document);
-            foreach (var pair in _errorPages)
+            foreach (var pair in ErrorPages)
                 Console.WriteLine("ErrorPage: {0}", pair);
-            foreach (var s in _sites)
+            foreach (var s in Sites)
             {
-                Console.WriteLine("Site: {0}, {1}, {2}, {3}", s.Name, s.PhysicalPath, s.VirtualPath, s.DirectoryBrowsing);
+                Console.WriteLine("Site: {0}, physical:{1}, virtual:{2}, browsing:{3}", s.Name, s.PhysicalPath, s.VirtualPath, s.DirectoryBrowsing);
                 foreach (var document in s.DefaultDocument)
                     Console.WriteLine("SiteDocument: {0}", document);
                 foreach (var pages in s.ErrorPages)
                     Console.WriteLine("SiteErrorPage: {0}", pages);
             }
-
-
-            
         }
+
+        #region Properties
+
+        public int Port { get; private set; }
+
+        public List<string> DefaultDocument { get; private set; }
+
+        public Dictionary<int, string> ErrorPages { get; private set; }
+
+        public List<Site> Sites { get; private set; }
+
+        #endregion
 
     }
 }

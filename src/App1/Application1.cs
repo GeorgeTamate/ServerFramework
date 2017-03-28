@@ -1,9 +1,9 @@
 ﻿using System;
 using PHttp.Application;
 
-namespace Mvc
+namespace App1
 {
-    public class Application : IPHttpApplication
+    public class Application1 : IPHttpApplication
     {
         public void Start()
         {
@@ -12,8 +12,10 @@ namespace Mvc
 
         public string ExecuteAction()
         {
-            Console.WriteLine("## Reflection ExecuteAction!");
-            return "success";
+            Console.WriteLine("## {0} Reflection ExecuteAction!", ToString());
+            //HomeController.Index();
+
+            return HomeController.Index();
         }
 
         public event ApplicationStartMethod applicationStartMethod;
@@ -21,7 +23,7 @@ namespace Mvc
 
         public string Name
         {
-            get { return ToString(); }
+            get { return "app"; }
             set { Console.WriteLine("Application.Name: set yet to be implemented."); }
         }
     }
