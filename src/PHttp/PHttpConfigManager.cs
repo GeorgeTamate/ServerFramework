@@ -41,6 +41,8 @@ namespace PHttp
 
         private void Init()
         {
+            Console.WriteLine("+-+-+ INITIATING CONFIGURATION MANAGER +-+-+");
+            Console.WriteLine("-- Loading configuration from JSON configuration file...");
             // Getting general JSON string from file
             JObject configJson = JsonConvert.DeserializeObject(File.ReadAllText(_path)) as JObject;
 
@@ -83,19 +85,26 @@ namespace PHttp
             }
 
             //Printing Config
-            Console.WriteLine("Port: {0}", Port);
+            Console.WriteLine("  + Port: {0}", Port);
             foreach (var document in DefaultDocument)
-                Console.WriteLine("SiteDocument: {0}", document);
-            foreach (var pair in ErrorPages)
-                Console.WriteLine("ErrorPage: {0}", pair);
+                Console.WriteLine("  + Default Document: {0}", document);
+            foreach (var page in ErrorPages)
+                Console.WriteLine("  + Error Page: {0}", page);
+            int i = 0;
             foreach (var s in Sites)
             {
-                Console.WriteLine("Site: {0}, physical:{1}, virtual:{2}, browsing:{3}", s.Name, s.PhysicalPath, s.VirtualPath, s.DirectoryBrowsing);
+                Console.WriteLine("  + Site [{0}] | Name: {1}", i, s.Name);
+                Console.WriteLine("  + Site [{0}] | Physical Path: {1}", i, s.PhysicalPath);
+                Console.WriteLine("  + Site [{0}] | Virtual Path: {1}", i, s.VirtualPath);
+                Console.WriteLine("  + Site [{0}] | Directory Browsing: {1}", i, s.DirectoryBrowsing);
                 foreach (var document in s.DefaultDocument)
-                    Console.WriteLine("SiteDocument: {0}", document);
+                    Console.WriteLine("  + SiteDocument: {0}", document);
                 foreach (var pages in s.ErrorPages)
-                    Console.WriteLine("SiteErrorPage: {0}", pages);
+                    Console.WriteLine("  + SiteErrorPage: {0}", pages);
+                i++;
             }
+            Console.WriteLine("-- Configuration Loading COMPLETE!");
+            Console.WriteLine("-");
         }
 
         #region Properties

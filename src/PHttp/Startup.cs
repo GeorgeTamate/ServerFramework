@@ -9,13 +9,14 @@ namespace PHttp
     public class Startup
     {
         private string _path = null;
+        private List<IPHttpApplication> _instances = new List<IPHttpApplication>();
 
         public Startup(string path)
         {
             _path = path;
         }
 
-        public void LoadApps()
+        public void LoadApps1()
         {
             if (string.IsNullOrEmpty(_path))
             {
@@ -80,28 +81,31 @@ namespace PHttp
 
 
 
-        public string CallApp(PHttpConfigManager config, string request)
+        public void LoadApps(PHttpConfigManager config)
         {
             DirectoryInfo info;
-            var instanceList = new List<IPHttpApplication>(); //list of applications compatible with IPHttpApplication
+            _instances = new List<IPHttpApplication>(); //list of applications compatible with IPHttpApplication
+
+            Console.WriteLine("+-+-+ INITIATE SITE APPLICATIONS +-+-+");
+            Console.WriteLine("-- Loading applications in Configuration Manager through Reflection...");
 
             foreach (var site in config.Sites)
             {
                 if (string.IsNullOrEmpty(site.PhysicalPath))
                 {
                     Console.WriteLine("** The physical app path field for '{0}' is null or empty.", site.Name);
-                    return null;
-                } //sanity check
-                Console.WriteLine("-- '{0}' path entry recieved.", site.Name);
+                    return;
+                } //sanity check: is a physical path defined for this site.
 
                 info = new DirectoryInfo(site.PhysicalPath);
 
                 if (!info.Exists)
                 {
-                    Console.WriteLine("** Path in '{0}' physical path does not exist.", site.Name);
-                    return null;
+                    Console.WriteLine("** Directory in '{0}' physical path does not exist.", site.Name);
+                    return;
                 } //make sure directory exists
-                Console.WriteLine("-- Path in '{0}' found.", site.Name);
+                Console.WriteLine("-- Directory for '{0}' found.", site.Name);
+                Console.WriteLine("-- Loading assembly files (*.dll) for '{0}'...", site.Name);
 
                 foreach (FileInfo file in info.GetFiles("*.dll")) //loop through all dll files in directory
                 {
@@ -118,38 +122,54 @@ namespace PHttp
                         continue;
                     }
 
+                    Console.WriteLine("-- App: '{0}', Assembly: '{1}' | Assembly loaded successfully.", site.Name, file.Name);
+                    Console.WriteLine("-- Looking for types compatible with IPHttpApplication...", site.Name);
+
                     var types = currentAssembly.GetTypes();
                     foreach (Type t in types)
                     {
                         if (t != typeof(IPHttpApplication) && typeof(IPHttpApplication).IsAssignableFrom(t))
                         {
-                            instanceList.Add((IPHttpApplication)Activator.CreateInstance(t));
+                            _instances.Add((IPHttpApplication)Activator.CreateInstance(t));
+                            Console.WriteLine("-- + Found Type '{0}' and added it to the App List.", t.ToString());
                         }
                     }
                 }
-
-
-
             }
 
-            
+            Console.WriteLine("-- Applications Loading COMPLETE!");
+            Console.WriteLine("   Listing loaded applications:");
 
-            Console.WriteLine("-- Apps Loading Complete!");
-            Console.WriteLine("   Calling ExecuteAction() method for specified type instance in list:");
-
-            foreach (var ins in instanceList)
+            foreach (var ins in _instances)
             {
-                Console.WriteLine("   + Virtual Path: {0} | Instance: {1}", ins.Name, ins.ToString());
+                Console.WriteLine("   + Instance Type: {0} | App Virtual Path: {1}", ins.ToString(), ins.Name);
             }
 
             Console.WriteLine("-- Done!");
+            Console.WriteLine("-");
 
+            //string response = null;
+            //foreach (var ins in _instances)
+            //{
+            //    //Console.WriteLine("---- InsName: {0}, RequestVirtual: {1} ----", ins.Name, request.Split('/')[1]);
+            //    if (ins.Name.Equals(request.Split('/')[1]))
+            //    {
+            //        response = ins.ExecuteAction();
+            //        break;
+            //    }
+            //}
+
+            //return response;
+        }
+
+        public string InvokeApp(string request)
+        {
             string response = null;
-            foreach (var ins in instanceList)
+            foreach (var ins in _instances)
             {
-                //Console.WriteLine("---- InsName: {0}, RequestVirtual: {1} ----", ins.Name, request.Split('/')[1]);
                 if (ins.Name.Equals(request.Split('/')[1]))
                 {
+                    Console.WriteLine("-- Invoking App Method | Request Virtual Path: '{0}', Matching Instance: {1}", request.Split('/')[1], ins.ToString());
                     response = ins.ExecuteAction();
                     break;
                 }

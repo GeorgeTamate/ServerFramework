@@ -7,12 +7,12 @@ namespace App1
     {
         public void Start()
         {
-            Console.WriteLine("## Reflection Start!");
+            Console.WriteLine("-- ## Reflection Start!");
         }
 
         public string ExecuteAction()
         {
-            Console.WriteLine("## {0} Reflection ExecuteAction!", ToString());
+            Console.WriteLine("-- ## {0} Reflection ExecuteAction!", ToString());
             //HomeController.Index();
 
             return HomeController.Index();
@@ -24,7 +24,7 @@ namespace App1
         public string Name
         {
             get { return "app"; }
-            set { Console.WriteLine("Application.Name: set yet to be implemented."); }
+            set { Console.WriteLine(" ## ** Application1.Name: set yet to be implemented."); }
         }
     }
 }

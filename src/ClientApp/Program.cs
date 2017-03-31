@@ -11,19 +11,26 @@ namespace ClientApp
     {
         static void Main(string[] args)
         {
-            string path = ConfigurationManager.AppSettings["ApplicationsDir"].ToString();
-            Console.WriteLine("Path directory: {0}", path);
+            Console.WriteLine("+-------------------------------------+");
+            Console.WriteLine("|  GEORGE WEBSITE APPLICATION SERVER  |");
+            Console.WriteLine("+-------------------------------------+");
+            Console.WriteLine();
 
-            var startup = new Startup(path);
-            startup.LoadApps();
+            string path = ConfigurationManager.AppSettings["ApplicationsDir"].ToString();
+            // Console.WriteLine("Path directory: {0}", path);
+
+            var startupApps = new Startup(path);
+            // startupApps.LoadApps1();
+
+            PHttpConfigManager config = new PHttpConfigManager();
+
+            startupApps.LoadApps(config);
 
             Console.WriteLine("Press any key to start server...");//
             Console.ReadKey();//
             //Console.WriteLine();
 
             //////////////////////////////////////////////////////////////////
-
-            PHttpConfigManager config = new PHttpConfigManager();
 
             using (var server = new HttpServer(config.Port)) //TODO 
             {
@@ -49,11 +56,10 @@ namespace ClientApp
 
                     if (!e.Request.Path.Equals("/favicon.ico")) // when not favicon.ico
                     {
-                        responseStr = startup.CallApp(config, e.Request.Path);
+                        responseStr = startupApps.InvokeApp(e.Request.Path);
 
                         if (responseStr != null)
                         {
-                            
                             using (var writer = new StreamWriter(e.Response.OutputStream))
                             {
                                 metaSection = responseStr.Split(';')[0];
