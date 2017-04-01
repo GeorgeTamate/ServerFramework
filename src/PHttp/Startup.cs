@@ -140,7 +140,7 @@ namespace PHttp
 
             foreach (var ins in _instances)
             {
-                Console.WriteLine("   + Instance Type: {0} | App Virtual Path: {1}", ins.ToString(), ins.Value.Name);
+                Console.WriteLine("   + Instance Type: {0} | App Virtual Path: {1}", ins.Value.ToString(), ins.Key);
             }
 
             Console.WriteLine("-- Done!");
@@ -150,12 +150,13 @@ namespace PHttp
         public object InvokeApp(string request)
         {
             object result = null;
+            string virtualPath = request.Split('/')[1];
             foreach (var ins in _instances)
             {
-                if (ins.Key.Equals(request.Split('/')[1]))
+                if (ins.Key.Equals(virtualPath))
                 {
                     Console.WriteLine("-- Invoking App Method | Request Virtual Path: '{0}', Matching Instance: {1}", request.Split('/')[1], ins.ToString());
-                    result = ins.Value.ExecuteAction();
+                    result = ins.Value.ExecuteAction(request.Remove(0, virtualPath.Length + 2));
                     break;
                 }
             }

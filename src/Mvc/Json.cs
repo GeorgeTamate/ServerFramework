@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Mvc
 {
-    class Json
+    public class Json : ActionResult
     {
     }
 }

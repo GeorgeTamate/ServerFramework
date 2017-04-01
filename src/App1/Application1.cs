@@ -13,6 +13,7 @@ namespace App1
         public override object ExecuteAction(string action)
         {
             Console.WriteLine("-- ## {0} Reflection ExecuteAction!", ToString());
+            Console.WriteLine(action);
             return HomeController.Index();
         }
 
