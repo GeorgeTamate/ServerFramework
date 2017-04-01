@@ -50,10 +50,6 @@
       <Project>{f104b12b-9c18-46c4-bf40-25b68a026aae}</Project>
       <Name>Mvc</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PHttp\PHttp.csproj">
-      <Project>{dadc8b32-9830-4c11-9402-6c600b59566d}</Project>
-      <Name>PHttp</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

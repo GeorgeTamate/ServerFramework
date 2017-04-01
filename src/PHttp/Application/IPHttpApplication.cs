@@ -6,7 +6,7 @@ namespace PHttp.Application
     {
         void Start();
 
-        string ExecuteAction();
+        object ExecuteAction();
 
         string Name { get; set; }
 

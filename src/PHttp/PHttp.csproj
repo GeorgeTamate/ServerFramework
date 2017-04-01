@@ -77,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\Home.html" />
+    <Content Include="Resources\Index.html" />
     <Content Include="Resources\InternalServerError.html" />
     <Content Include="Resources\NotFound.html" />
   </ItemGroup>

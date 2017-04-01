@@ -5,12 +5,14 @@ namespace Mvc
 {
     public class Application : IPHttpApplication
     {
-        public void Start()
+        string virtualPath = "";
+
+        public virtual void Start()
         {
             Console.WriteLine("## Reflection Start!");
         }
 
-        public string ExecuteAction()
+        public virtual object ExecuteAction(string action)
         {
             Console.WriteLine("## Reflection ExecuteAction!");
             return "success";
@@ -21,8 +23,8 @@ namespace Mvc
 
         public string Name
         {
-            get { return ToString(); }
-            set { Console.WriteLine("Application.Name: set yet to be implemented."); }
+            get { return virtualPath; }
+            set { virtualPath = value; }
         }
     }
 }

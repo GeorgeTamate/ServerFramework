@@ -9,7 +9,8 @@ namespace PHttp
     public class Startup
     {
         private string _path = null;
-        private List<IPHttpApplication> _instances = new List<IPHttpApplication>();
+        //private List<IPHttpApplication> _instances = new List<IPHttpApplication>();
+        private Dictionary<string, IPHttpApplication> _instances = new Dictionary<string, IPHttpApplication>();
 
         public Startup(string path)
         {
@@ -78,13 +79,10 @@ namespace PHttp
         }
 
 
-
-
-
         public void LoadApps(PHttpConfigManager config)
         {
             DirectoryInfo info;
-            _instances = new List<IPHttpApplication>(); //list of applications compatible with IPHttpApplication
+            _instances = new Dictionary<string, IPHttpApplication>(); //list of applications compatible with IPHttpApplication
 
             Console.WriteLine("+-+-+ INITIATE SITE APPLICATIONS +-+-+");
             Console.WriteLine("-- Loading applications in Configuration Manager through Reflection...");
@@ -107,7 +105,7 @@ namespace PHttp
                 Console.WriteLine("-- Directory for '{0}' found.", site.Name);
                 Console.WriteLine("-- Loading assembly files (*.dll) for '{0}'...", site.Name);
 
-                foreach (FileInfo file in info.GetFiles("*.dll")) //loop through all dll files in directory
+                foreach (FileInfo file in info.GetFiles(site.Name + ".dll")) //loop through all dll files in directory
                 {
                     Assembly currentAssembly = null;
                     try
@@ -130,7 +128,7 @@ namespace PHttp
                     {
                         if (t != typeof(IPHttpApplication) && typeof(IPHttpApplication).IsAssignableFrom(t))
                         {
-                            _instances.Add((IPHttpApplication)Activator.CreateInstance(t));
+                            _instances.Add(site.VirtualPath, (IPHttpApplication)Activator.CreateInstance(t));
                             Console.WriteLine("-- + Found Type '{0}' and added it to the App List.", t.ToString());
                         }
                     }
@@ -142,40 +140,26 @@ namespace PHttp
 
             foreach (var ins in _instances)
             {
-                Console.WriteLine("   + Instance Type: {0} | App Virtual Path: {1}", ins.ToString(), ins.Name);
+                Console.WriteLine("   + Instance Type: {0} | App Virtual Path: {1}", ins.ToString(), ins.Value.Name);
             }
 
             Console.WriteLine("-- Done!");
             Console.WriteLine("-");
-
-            //string response = null;
-            //foreach (var ins in _instances)
-            //{
-            //    //Console.WriteLine("---- InsName: {0}, RequestVirtual: {1} ----", ins.Name, request.Split('/')[1]);
-            //    if (ins.Name.Equals(request.Split('/')[1]))
-            //    {
-            //        response = ins.ExecuteAction();
-            //        break;
-            //    }
-            //}
-
-            //return response;
         }
 
-        public string InvokeApp(string request)
+        public object InvokeApp(string request)
         {
-            string response = null;
+            object result = null;
             foreach (var ins in _instances)
             {
-                if (ins.Name.Equals(request.Split('/')[1]))
+                if (ins.Key.Equals(request.Split('/')[1]))
                 {
                     Console.WriteLine("-- Invoking App Method | Request Virtual Path: '{0}', Matching Instance: {1}", request.Split('/')[1], ins.ToString());
-                    response = ins.ExecuteAction();
+                    result = ins.Value.ExecuteAction();
                     break;
                 }
             }
-
-            return response;
+            return result;
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace Mvc
+﻿namespace Mvc
 {
     public class ActionResult
     {
@@ -10,6 +8,6 @@ namespace Mvc
 
         public string ContentType { get; set; }
 
-        public MemoryStream Content { get; set; }
+        public string Content { get; set; }
     }
 }

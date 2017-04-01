@@ -4,6 +4,7 @@ using PHttp;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Mvc;
 
 namespace ClientApp
 {
@@ -51,42 +52,56 @@ namespace ClientApp
 
                     string filePath = ConfigurationManager.AppSettings["FilesDir"].ToString() + e.Request.Path;
                     string resourcePath;
-                    string responseStr;
-                    string metaSection;
+                    ActionResult result = null;
 
                     if (!e.Request.Path.Equals("/favicon.ico")) // when not favicon.ico
                     {
-                        responseStr = startupApps.InvokeApp(e.Request.Path);
+                        result = (ActionResult)startupApps.InvokeApp(e.Request.Path);
 
-                        if (responseStr != null)
+                        if (result != null)
                         {
                             using (var writer = new StreamWriter(e.Response.OutputStream))
                             {
-                                metaSection = responseStr.Split(';')[0];
-                                responseStr = responseStr.Remove(0, metaSection.Length + 1);
-                                e.Response.ContentType = GetMimeType(Path.GetExtension(metaSection.Split('/')[0]));
-                                e.Response.StatusCode = int.Parse(metaSection.Split('/')[1]);
-                                e.Response.StatusDescription = metaSection.Split('/')[2];
+                                e.Response.ContentType = result.ContentType;
+                                e.Response.StatusCode = result.StatusCode;
+                                e.Response.StatusDescription = result.StatusDescription;
 
-                                writer.Write(responseStr);
+                                writer.Write(result.Content);
                             }
                         }
-                        else // When nothing else worked (resource not found)
+                        else if (e.Request.Path.Equals("/login") && e.Request.HttpMethod.Equals("POST"))
                         {
-                            resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/NotFound.html";
-                            using (var stream = File.Open(resourcePath, FileMode.Open))
+                            Console.WriteLine(e.Request.Form.Get("username"));
+                            Console.WriteLine(e.Request.Form.Get("password"));
+                            using (var writer = new StreamWriter(e.Response.OutputStream))
                             {
-                                e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
+                                writer.Write("LOGIN!");
+                            }
+                        }
+                        else if (e.Request.Path.Equals("/"))
+                        {
+                            using (var writer = new StreamWriter(e.Response.OutputStream))
+                            {
+                                resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString();
+                                e.Response.StatusCode = 200;
+                                e.Response.StatusDescription = "OK";
+                                e.Response.ContentType = GetMimeType(Path.GetExtension(config.FindDefaultDocumentFileName(resourcePath)));
+
+                                writer.Write(config.FindDefaultDocumentText(resourcePath));
+                            }
+                        }
+                        else// When nothing else worked (resource not found)
+                        {
+                            using (var writer = new StreamWriter(e.Response.OutputStream))
+                            {
+                                resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString();
                                 e.Response.StatusCode = 404;
                                 e.Response.StatusDescription = "Not Found";
-                                byte[] buffer = new byte[4096];
-                                int read;
+                                e.Response.ContentType = GetMimeType(Path.GetExtension(config.FindErrorPageFileName(e.Response.StatusCode)));
 
-                                while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
-                                {
-                                    e.Response.OutputStream.Write(buffer, 0, read);
-                                }
+                                writer.Write(config.FindErrorPageText(e.Response.StatusCode, resourcePath));
                             }
+
                         }
                     }
                     

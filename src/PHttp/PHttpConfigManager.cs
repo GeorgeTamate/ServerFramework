@@ -107,6 +107,52 @@ namespace PHttp
             Console.WriteLine("-");
         }
 
+        public string FindDefaultDocumentText(string path)
+        {
+            foreach (var document in DefaultDocument)
+            {
+                if (File.Exists(path + "/" + document))
+                {
+                    return File.ReadAllText(path + "/" + document);
+                }
+            }
+            return null;
+        }
+
+        public string FindDefaultDocumentFileName(string path)
+        {
+            foreach (var document in DefaultDocument)
+            {
+                if (File.Exists(path + "/" + document))
+                {
+                    return document;
+                }
+            }
+            return null;
+        }
+
+        public string FindErrorPageText(int statusCode, string path)
+        {
+            foreach (var page in ErrorPages)
+            {
+                if (page.Key.Equals(statusCode))
+                {
+                    return File.ReadAllText(path + "/" + page.Value);
+                }
+            }
+            return null;
+        }
+
+        public string FindErrorPageFileName(int statusCode)
+        {
+            string fileName = null;
+            if (ErrorPages.ContainsKey(statusCode))
+            {
+                ErrorPages.TryGetValue(statusCode, out fileName);
+            }
+            return fileName;
+        }
+
         #region Properties
 
         public int Port { get; private set; }
