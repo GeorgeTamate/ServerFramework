@@ -46,8 +46,10 @@
   <ItemGroup>
     <Compile Include="ActionResult.cs" />
     <Compile Include="Application.cs" />
-    <Compile Include="AttributeGET.cs" />
-    <Compile Include="AttributePOST.cs" />
+    <Compile Include="Attributes\HttpDELETE.cs" />
+    <Compile Include="Attributes\HttpGET.cs" />
+    <Compile Include="Attributes\HttpPOST.cs" />
+    <Compile Include="Attributes\HttpPUT.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="ControllerBase.cs" />

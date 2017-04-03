@@ -1,35 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Mvc
 {
     public class Router
     {
-        private string _controller = null;
-        private string _action = null;
-        private string _param = null;
-
         public Router(string path)
         {
+            ControllerName = null;
+            ActionName = null;
+            Url = new Dictionary<int, string>();
+
             string[] pathArray = path.Split('/');
+            int key = 0;
 
             if (pathArray.Length >= 1)
-                _controller = pathArray[0];
+                ControllerName = pathArray[0];
             if (pathArray.Length >= 2)
-                _action = pathArray[1];
+                ActionName = pathArray[1];
             if (pathArray.Length >= 3)
             {
-                _param = "";
                 for (int i = 2; i < pathArray.Length; i++)
-                    _param += pathArray[i] + "/";
-            }
-            if(_controller == null)
-            {
-                Console.WriteLine("_controller is Null");
-            }
-            if (_controller.Equals(""))
-            {
-                Console.WriteLine("_controller is Empty");
+                    if (!pathArray[i].Equals(""))
+                        Url.Add(++key, pathArray[i]);
             }
         }
 
@@ -38,35 +32,41 @@ namespace Mvc
             var assembly = currentType.Assembly;
             Type type = null;
 
-            if (_controller == null)
+            if (ControllerName == null)
                 return null;
 
             foreach (Type t in assembly.GetTypes())
             {
-                if (t.Name.ToLower().Equals(_controller.ToLower() + "controller"))
+                if (t.Name.ToLower().Equals(ControllerName.ToLower() + "controller"))
                     type = t;
             }
 
             if (type == null)
-                return Controller.NotFound("Controller not Found.");
+                return new Controller().NotFound("Controller not Found.");
 
             var instance = Activator.CreateInstance(type);
             Console.WriteLine("Controller: " + instance.GetType().ToString());
 
-            if (_action == null)
-                return Controller.NotFound("No action specified.");
+            if (ActionName == null)
+                return new Controller().NotFound("No action specified.");
 
             MethodInfo[] methodInfos = instance.GetType().GetMethods();
             foreach (var m in methodInfos)
             {
                 Console.WriteLine("Method: " + m.Name);
-                if (m.Name.ToLower().Equals(_action.ToLower()))
+                if (m.Name.ToLower().Equals(ActionName.ToLower()))
                 {
-                    return (ActionResult) m.Invoke(instance, null);
+                    return (ActionResult)m.Invoke(instance, null);
                 }
             }
 
-            return Controller.NotFound("Action not Found."); ;
+            return new Controller().NotFound("Action not Found."); ;
         }
+
+        public string ControllerName { get; set; }
+
+        public string ActionName { get; set; }
+
+        public Dictionary<int, string> Url { get; set; }
     }
 }

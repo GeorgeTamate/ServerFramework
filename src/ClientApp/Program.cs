@@ -56,7 +56,7 @@ namespace ClientApp
 
                     if (!e.Request.Path.Equals("/favicon.ico")) // when not favicon.ico
                     {
-                        result = (ActionResult)startupApps.InvokeApp(e.Request.Path);
+                        result = (ActionResult)startupApps.InvokeApp(e.Request, e.Context);
 
                         if (result != null)
                         {

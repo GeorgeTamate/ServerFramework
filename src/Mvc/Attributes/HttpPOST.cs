@@ -1,15 +1,14 @@
 ﻿
-namespace Mvc
+namespace Mvc.Attributes
 {
     [System.AttributeUsage(System.AttributeTargets.Method)]
-    public class AttributePOST : System.Attribute
+    public class HttpPOST: System.Attribute
     {
         private string verb;
 
-        public AttributePOST()
+        public HttpPOST()
         {
             verb = "POST";
         }
     }
 }
-

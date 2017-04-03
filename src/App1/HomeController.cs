@@ -1,23 +1,18 @@
 ﻿using Mvc;
+using Mvc.Attributes;
 using System.IO;
 
 namespace App1
 {
     public class HomeController : Controller
     {
-        [AttributeGET]
-        public static ActionResult Index()
+        [HttpGET]
+        public ActionResult Index()
         {
-            var model = new
-            {
-                Names = ""
-            };
-
             string layoutPath = Directory.GetCurrentDirectory() + "/../../../../view/layout.html";
             string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/partial.html";
-
             var result = new ActionResult();
-            result.Content = View(layoutPath, partialPath, model);
+            result.Content = View(layoutPath, partialPath, new object());
             result.ContentType = "text/html";
             result.StatusCode = 200;
             result.StatusDescription = "OK";
@@ -25,14 +20,13 @@ namespace App1
             return result;
         }
 
-        [AttributeGET]
+        [HttpGET]
         public ActionResult About()
         {
-            var model = new object();
             string layoutPath = Directory.GetCurrentDirectory() + "/../../../../view/layout.html";
             string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/about.html";
             var result = new ActionResult();
-            result.Content = View(layoutPath, partialPath, model);
+            result.Content = View(layoutPath, partialPath, new object());
             result.ContentType = "text/html";
             result.StatusCode = 200;
             result.StatusDescription = "OK";

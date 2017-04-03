@@ -147,23 +147,16 @@ namespace PHttp
             Console.WriteLine("-");
         }
 
-        public object InvokeApp(string request)
+        public object InvokeApp(HttpRequest request, HttpContext context)
         {
             object result = null;
-            string virtualPath = request.Split('/')[1];
+            string virtualPath = request.Path.Split('/')[1];
             foreach (var ins in _instances)
             {
                 if (ins.Key.Equals(virtualPath))
                 {
-                    Console.WriteLine("-- Invoking App Method | Request Virtual Path: '{0}', Matching Instance: {1}", request.Split('/')[1], ins.ToString());
-                    try
-                    {
-                        result = ins.Value.ExecuteAction(request.Remove(0, virtualPath.Length + 2));
-                    }
-                    catch
-                    {
-                        result = ins.Value.ExecuteAction(null);
-                    }
+                    Console.WriteLine("-- Invoking App Method | Request Virtual Path: '{0}', Matching Instance: {1}", request.Path.Split('/')[1], ins.ToString());
+                    result = ins.Value.ExecuteAction(request, context); //request.Path.Remove(0, virtualPath.Length + 2)
                     break;
                 }
             }

@@ -1,10 +1,15 @@
-﻿using System.IO;
+﻿using PHttp;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Mvc
 {
     public class Controller
     {
-        public static string View(string layoutRoute, string viewRoute, object model, dynamic viewData = null)
+        private HttpRequest _request;
+        private HttpContext _context;
+
+        public string View(string layoutRoute, string viewRoute, object model, dynamic viewData = null)
         {
             var layout = File.ReadAllText(layoutRoute);
             var partial = File.ReadAllText(viewRoute);
@@ -21,7 +26,7 @@ namespace Mvc
             return template(data);
         }
 
-        public static string NotFoundView(string layoutRoute, string message)
+        public string NotFoundView(string layoutRoute, string message)
         {
             var layout = File.ReadAllText(layoutRoute);
             var partial = "<h1>404: Not Found</h1><br><p>{{Model.Msg}}</p>";
@@ -39,7 +44,7 @@ namespace Mvc
             return template(data);
         }
 
-        public static ActionResult NotFound(string msg)
+        public ActionResult NotFound(string msg)
         {
             string layoutPath = Directory.GetCurrentDirectory() + "/../../../../view/layout.html";
 
@@ -51,5 +56,23 @@ namespace Mvc
 
             return result;
         }
+
+        public object Request
+        {
+            get { return _request; }
+            set { _request = (HttpRequest)value; }
+        }
+
+        public object Context
+        {
+            get { return _context; }
+            set { _context = (HttpContext)value; }
+        }
+
+        public Router Route { get; set; }
+
+        public Dictionary<string, string> Session { get; set; }
+
+        public Dictionary<string, string> User { get; set; }
     }
 }

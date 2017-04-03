@@ -45,7 +45,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Application\IPHttpApplication.cs" />
-    <Compile Include="AppResponse.cs" />
     <Compile Include="HttpClient.cs" />
     <Compile Include="HttpContext.cs" />
     <Compile Include="HttpCookie.cs" />

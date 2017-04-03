@@ -1,14 +1,14 @@
 ﻿
-namespace Mvc
+namespace Mvc.Attributes
 {
     [System.AttributeUsage(System.AttributeTargets.Method)]
-    public class AttributeGET : System.Attribute
+    public class HttpPUT : System.Attribute
     {
         private string verb;
 
-        public AttributeGET()
+        public HttpPUT()
         {
-            verb = "GET";
+            verb = "PUT";
         }
     }
 }

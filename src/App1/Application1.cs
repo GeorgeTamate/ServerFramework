@@ -10,19 +10,26 @@ namespace App1
         //    Console.WriteLine("-- ## Reflection Start!");
         //}
 
-        public override object ExecuteAction(string path)
+        public override object ExecuteAction(object request, object context)
         {
+            string path = ParsePath(request);
+
             Console.WriteLine("-- ## {0} Reflection ExecuteAction!", ToString());
             if (path == null || path.Equals(""))
-                return HomeController.Index();
-            
+                return new HomeController().Index();
+
             Console.WriteLine(path);
 
             var router = new Router(path);
             var result = router.CallAction(GetType());
 
             if (result == null)
-                return HomeController.Index();
+                return new HomeController().Index();
+
+            //test
+            var homeController = new HomeController();
+            homeController.Context = context;
+            homeController.Request = request;
 
             return result;
         }
