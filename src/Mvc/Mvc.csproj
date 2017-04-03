@@ -46,12 +46,15 @@
   <ItemGroup>
     <Compile Include="ActionResult.cs" />
     <Compile Include="Application.cs" />
+    <Compile Include="AttributeGET.cs" />
+    <Compile Include="AttributePOST.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="ControllerBase.cs" />
     <Compile Include="IApp.cs" />
     <Compile Include="Json.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Router.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PHttp\PHttp.csproj">

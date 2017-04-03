@@ -156,7 +156,14 @@ namespace PHttp
                 if (ins.Key.Equals(virtualPath))
                 {
                     Console.WriteLine("-- Invoking App Method | Request Virtual Path: '{0}', Matching Instance: {1}", request.Split('/')[1], ins.ToString());
-                    result = ins.Value.ExecuteAction(request.Remove(0, virtualPath.Length + 2));
+                    try
+                    {
+                        result = ins.Value.ExecuteAction(request.Remove(0, virtualPath.Length + 2));
+                    }
+                    catch
+                    {
+                        result = ins.Value.ExecuteAction(null);
+                    }
                     break;
                 }
             }

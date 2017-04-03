@@ -10,11 +10,21 @@ namespace App1
         //    Console.WriteLine("-- ## Reflection Start!");
         //}
 
-        public override object ExecuteAction(string action)
+        public override object ExecuteAction(string path)
         {
             Console.WriteLine("-- ## {0} Reflection ExecuteAction!", ToString());
-            Console.WriteLine(action);
-            return HomeController.Index();
+            if (path == null || path.Equals(""))
+                return HomeController.Index();
+            
+            Console.WriteLine(path);
+
+            var router = new Router(path);
+            var result = router.CallAction(GetType());
+
+            if (result == null)
+                return HomeController.Index();
+
+            return result;
         }
 
         //public string Name
