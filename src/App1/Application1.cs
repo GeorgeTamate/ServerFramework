@@ -21,7 +21,7 @@ namespace App1
             Console.WriteLine(path);
 
             var router = new Router(path);
-            var result = router.CallAction(GetType());
+            var result = router.CallAction(GetType(), request);
 
             if (result == null)
                 return new HomeController().Index();

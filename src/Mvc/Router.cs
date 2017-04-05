@@ -1,11 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Mvc.Attributes;
+using PHttp;
 
 namespace Mvc
 {
     public class Router
     {
+        private readonly Dictionary<string, Type> _methodAttributes
+            = new Dictionary<string, Type>
+            {
+                { "GET", typeof(HttpGET) },
+                { "POST", typeof(HttpPOST) },
+                { "PUT", typeof(HttpPUT) },
+                { "DELETE", typeof(HttpDELETE) }
+            };
+
         public Router(string path)
         {
             ControllerName = null;
@@ -27,7 +38,7 @@ namespace Mvc
             }
         }
 
-        public ActionResult CallAction(Type currentType)
+        public ActionResult CallAction(Type currentType, object request)
         {
             var assembly = currentType.Assembly;
             Type type = null;
@@ -50,17 +61,22 @@ namespace Mvc
             if (ActionName == null)
                 return new Controller().NotFound("No action specified.");
 
+            Type httpMethodType;
             MethodInfo[] methodInfos = instance.GetType().GetMethods();
+
             foreach (var m in methodInfos)
             {
-                Console.WriteLine("Method: " + m.Name);
-                if (m.Name.ToLower().Equals(ActionName.ToLower()))
+                _methodAttributes.TryGetValue(((HttpRequest)request).HttpMethod, out httpMethodType);
+                //if (m.GetCustomAttributes(typeof(HttpGET), true).Length > 0)
+                //    Console.WriteLine("Method: " + m.Name);
+                if (m.Name.ToLower().Equals(ActionName.ToLower()))//m.GetCustomAttributes(_methodAttributes., true))
                 {
-                    return (ActionResult)m.Invoke(instance, null);
+                    if (m.GetCustomAttributes(httpMethodType, true).Length > 0)
+                        return (ActionResult)m.Invoke(instance, null);
                 }
             }
 
-            return new Controller().NotFound("Action not Found."); ;
+            return new Controller().NotFound("Action not Found.");
         }
 
         public string ControllerName { get; set; }

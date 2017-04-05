@@ -23,7 +23,7 @@ namespace ClientApp
             var startupApps = new Startup(path);
             // startupApps.LoadApps1();
 
-            PHttpConfigManager config = new PHttpConfigManager();
+            PHttpConfigManager config = new PHttpConfigManager(ConfigurationManager.AppSettings["ConfigDir"].ToString());
 
             startupApps.LoadApps(config);
 
