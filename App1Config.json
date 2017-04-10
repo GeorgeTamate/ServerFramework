@@ -1,0 +1,10 @@
+{
+    "resourcesPath": "",
+    "layout": "partial.html",
+    "partial": [
+        "partial.html",
+        "about.html"
+    ],
+    "connectionString": ""
+
+}

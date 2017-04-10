@@ -4,6 +4,7 @@ using PHttp;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Mvc;
 
 namespace ClientApp
 {
@@ -11,21 +12,28 @@ namespace ClientApp
     {
         static void Main(string[] args)
         {
-            string path = ConfigurationManager.AppSettings["ApplicationsDir"].ToString();
-            Console.WriteLine("Path directory: {0}", path);
-
-            var startup = new Startup(path);
-            startup.LoadApps();
-
-            //Console.WriteLine("Press any key to start server...");//
-            //Console.ReadKey();//
+            Console.WriteLine("+-------------------------------------+");
+            Console.WriteLine("|  GEORGE WEBSITE APPLICATION SERVER  |");
+            Console.WriteLine("+-------------------------------------+");
             Console.WriteLine();
+
+            string path = ConfigurationManager.AppSettings["ApplicationsDir"].ToString();
+            // Console.WriteLine("Path directory: {0}", path);
+
+            var startupApps = new Startup(path);
+            // startupApps.LoadApps1();
+
+            PHttpConfigManager config = new PHttpConfigManager(ConfigurationManager.AppSettings["ConfigDir"].ToString());
+
+            startupApps.LoadApps(config);
+
+            Console.WriteLine("Press any key to start server...");//
+            Console.ReadKey();//
+            //Console.WriteLine();
 
             //////////////////////////////////////////////////////////////////
 
-            int port = 8085;
-
-            using (var server = new HttpServer(port)) //TODO 
+            using (var server = new HttpServer(config.Port)) //TODO 
             {
                 #region Request Received
 
@@ -44,58 +52,112 @@ namespace ClientApp
 
                     string filePath = ConfigurationManager.AppSettings["FilesDir"].ToString() + e.Request.Path;
                     string resourcePath;
+                    ActionResult result = null;
 
-                    if (File.Exists(filePath)) // When requested file exists
+                    if (!e.Request.Path.Equals("/favicon.ico")) // when not favicon.ico
                     {
-                        using (var stream = File.Open(filePath, FileMode.Open))
-                        {
-                            e.Response.ContentType = GetMimeType(Path.GetExtension(e.Request.Path));
-                            byte[] buffer = new byte[4096];
-                            int read;
+                        result = (ActionResult)startupApps.InvokeApp(e.Request, e.Context);
 
-                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                        if (result != null)
+                        {
+                            using (var writer = new StreamWriter(e.Response.OutputStream))
                             {
-                                e.Response.OutputStream.Write(buffer, 0, read);
+                                e.Response.ContentType = result.ContentType;
+                                e.Response.StatusCode = result.StatusCode;
+                                e.Response.StatusDescription = result.StatusDescription;
+
+                                writer.Write(result.Content);
                             }
                         }
-                    }
-                    else if (e.Request.Path.Equals("/") || e.Request.Path.Equals("/home")) // Displays home page
-                    {
-                        resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/Home.html";
-                        using (var stream = File.Open(resourcePath, FileMode.Open))
+                        else if (e.Request.Path.Equals("/login") && e.Request.HttpMethod.Equals("POST"))
                         {
-                            e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
-                            byte[] buffer = new byte[4096];
-                            int read;
-
-                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                            Console.WriteLine(e.Request.Form.Get("username"));
+                            Console.WriteLine(e.Request.Form.Get("password"));
+                            using (var writer = new StreamWriter(e.Response.OutputStream))
                             {
-                                e.Response.OutputStream.Write(buffer, 0, read);
+                                writer.Write("LOGIN!");
                             }
                         }
-                    }
-                    else if (e.Request.Path.Equals("/favicon.ico")) // when favicon.ico request comes up
-                    {
-                        // Do nothing
-                    }
-                    else // When nothing else worked (resource not found)
-                    {
-                        resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/NotFound.html";
-                        using (var stream = File.Open(resourcePath, FileMode.Open))
+                        else if (e.Request.Path.Equals("/"))
                         {
-                            e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
-                            e.Response.StatusCode = 404;
-                            e.Response.StatusDescription = "Not Found";
-                            byte[] buffer = new byte[4096];
-                            int read;
-
-                            while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                            using (var writer = new StreamWriter(e.Response.OutputStream))
                             {
-                                e.Response.OutputStream.Write(buffer, 0, read);
+                                resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString();
+                                e.Response.StatusCode = 200;
+                                e.Response.StatusDescription = "OK";
+                                e.Response.ContentType = GetMimeType(Path.GetExtension(config.FindDefaultDocumentFileName(resourcePath)));
+
+                                writer.Write(config.FindDefaultDocumentText(resourcePath));
                             }
                         }
-                    }
+                        else// When nothing else worked (resource not found)
+                        {
+                            using (var writer = new StreamWriter(e.Response.OutputStream))
+                            {
+                                resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString();
+                                e.Response.StatusCode = 404;
+                                e.Response.StatusDescription = "Not Found";
+                                e.Response.ContentType = GetMimeType(Path.GetExtension(config.FindErrorPageFileName(e.Response.StatusCode)));
 
+                                writer.Write(config.FindErrorPageText(e.Response.StatusCode, resourcePath));
+                            }
+
+                        }
+                    }
+                    
+
+                    #region old way
+                    //if (File.Exists(filePath)) // When requested file exists
+                    //{
+                    //    using (var stream = File.Open(filePath, FileMode.Open))
+                    //    {
+                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(e.Request.Path));
+                    //        byte[] buffer = new byte[4096];
+                    //        int read;
+
+                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                    //        {
+                    //            e.Response.OutputStream.Write(buffer, 0, read);
+                    //        }
+                    //    }
+                    //}
+                    //else if (e.Request.Path.Equals("/") || e.Request.Path.Equals("/home")) // Displays home page
+                    //{
+                    //    resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/Home.html";
+                    //    using (var stream = File.Open(resourcePath, FileMode.Open))
+                    //    {
+                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
+                    //        byte[] buffer = new byte[4096];
+                    //        int read;
+
+                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                    //        {
+                    //            e.Response.OutputStream.Write(buffer, 0, read);
+                    //        }
+                    //    }
+                    //}
+                    //else if (e.Request.Path.Equals("/favicon.ico")) // when favicon.ico request comes up
+                    //{
+                    //    // Do nothing
+                    //}
+                    //else // When nothing else worked (resource not found)
+                    //{
+                    //    resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/NotFound.html";
+                    //    using (var stream = File.Open(resourcePath, FileMode.Open))
+                    //    {
+                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
+                    //        e.Response.StatusCode = 404;
+                    //        e.Response.StatusDescription = "Not Found";
+                    //        byte[] buffer = new byte[4096];
+                    //        int read;
+
+                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                    //        {
+                    //            e.Response.OutputStream.Write(buffer, 0, read);
+                    //        }
+                    //    }
+                    //}
+                    #endregion
 
                 };
 
@@ -124,16 +186,16 @@ namespace ClientApp
 
                 //Process.Start(String.Format("http://{0}/", server.EndPoint));
 
-                //Console.WriteLine("Press any key to stop server...");
-                //Console.ReadKey();
+                Console.WriteLine("Press any key to stop server...");
+                Console.ReadKey();
 
                 //// When the HttpServer is disposed, all opened connections
                 //// are automatically closed.
 
-                //server.Stop();
+                server.Stop();
 
-                //Console.WriteLine("Press any key to exit...");
-                //Console.ReadKey();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
             }
         }
 
@@ -718,7 +780,7 @@ namespace ClientApp
         {
             if (extension == null)
             {
-                throw new ArgumentNullException(nameof(extension));
+                throw new ArgumentNullException(extension.ToString());
             }
 
             if (!extension.StartsWith("."))
