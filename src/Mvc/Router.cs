@@ -38,7 +38,7 @@ namespace Mvc
             }
         }
 
-        public ActionResult CallAction(Type currentType, object request)
+        public ActionResult CallAction(Type currentType, object request, object context)
         {
             var assembly = currentType.Assembly;
             Type type = null;
@@ -49,14 +49,19 @@ namespace Mvc
             foreach (Type t in assembly.GetTypes())
             {
                 if (t.Name.ToLower().Equals(ControllerName.ToLower() + "controller"))
+                {
                     type = t;
+                    break;
+                }
             }
 
             if (type == null)
                 return new Controller().NotFound("Controller not Found.");
 
             var instance = Activator.CreateInstance(type);
-            Console.WriteLine("Controller: " + instance.GetType().ToString());
+            Console.WriteLine("   + Controller: {0}", instance.GetType().ToString());
+            ((Controller)instance).Request = request;
+            ((Controller)instance).Context = context;
 
             if (ActionName == null)
                 return new Controller().NotFound("No action specified.");
@@ -72,7 +77,10 @@ namespace Mvc
                 if (m.Name.ToLower().Equals(ActionName.ToLower()))//m.GetCustomAttributes(_methodAttributes., true))
                 {
                     if (m.GetCustomAttributes(httpMethodType, true).Length > 0)
+                    {
+                        Console.WriteLine("   + Action: [{0}] {1}", httpMethodType.Name, m.Name);
                         return (ActionResult)m.Invoke(instance, null);
+                    }
                 }
             }
 

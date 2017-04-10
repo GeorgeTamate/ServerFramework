@@ -1,5 +1,6 @@
 ﻿using Mvc;
 using Mvc.Attributes;
+using Newtonsoft.Json.Linq;
 using System.IO;
 
 namespace App1
@@ -13,9 +14,6 @@ namespace App1
             string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/partial.html";
             var result = new ActionResult();
             result.Content = View(layoutPath, partialPath, new object());
-            result.ContentType = "text/html";
-            result.StatusCode = 200;
-            result.StatusDescription = "OK";
 
             return result;
         }
@@ -27,12 +25,59 @@ namespace App1
             string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/about.html";
             var result = new ActionResult();
             result.Content = View(layoutPath, partialPath, new object());
-            result.ContentType = "text/html";
-            result.StatusCode = 200;
-            result.StatusDescription = "OK";
 
             return result;
 
+        }
+
+        [HttpGET]
+        public ActionResult Login()
+        {
+            string layoutPath = Directory.GetCurrentDirectory() + "/../../../../view/layout.html";
+            string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/login.html";
+            var result = new ActionResult();
+            result.Content = View(layoutPath, partialPath, new object());
+
+            return result;
+
+        }
+
+        [HttpPOST]
+        public ActionResult LoginPost()
+        {
+            var result = new JsonResult();
+            var json = new JObject();
+            var parameters = PostParams();
+            foreach(var param in parameters)
+            {
+                json[param.Key] = param.Value;
+            }
+            result.Content = json.ToString();
+
+            return result;
+        }
+
+        [HttpGET]
+        public ActionResult Json()
+        {
+            var result = new JsonResult();
+            var json = new JObject();
+
+            json["name"] = "App1";
+            json["author"] = "George Garcia Tamate";
+            json["version"] = 0.7;
+            result.Content = json.ToString();
+
+            return result;
+        }
+
+        [HttpGET]
+        public ActionResult Text()
+        {
+            var result = new ContentResult();
+            result.Content = "Hello App1 !";
+
+            return result;
         }
     }
 }

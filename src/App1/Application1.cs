@@ -18,10 +18,10 @@ namespace App1
             if (path == null || path.Equals(""))
                 return new HomeController().Index();
 
-            Console.WriteLine(path);
+            Console.WriteLine("   + Path: {0}", path);
 
             var router = new Router(path);
-            var result = router.CallAction(GetType(), request);
+            var result = router.CallAction(GetType(), request, context);
 
             if (result == null)
                 return new HomeController().Index();

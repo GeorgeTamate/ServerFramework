@@ -48,13 +48,20 @@ namespace Mvc
         {
             string layoutPath = Directory.GetCurrentDirectory() + "/../../../../view/layout.html";
 
-            var result = new ActionResult();
+            var result = new ActionResult(404, "Not Found");
             result.Content = NotFoundView(layoutPath, msg);
-            result.ContentType = "text/html";
-            result.StatusCode = 404;
-            result.StatusDescription = "Not Found";
 
             return result;
+        }
+
+        protected Dictionary<string, string> PostParams()
+        {
+            var parameters = new Dictionary<string, string>();
+            foreach (string key in _request.Form.AllKeys)
+            {
+                parameters.Add(key, _request.Form.Get(key));
+            }
+            return parameters;
         }
 
         public object Request

@@ -50,11 +50,9 @@
     <Compile Include="Attributes\HttpGET.cs" />
     <Compile Include="Attributes\HttpPOST.cs" />
     <Compile Include="Attributes\HttpPUT.cs" />
-    <Compile Include="Content.cs" />
+    <Compile Include="ContentResult.cs" />
     <Compile Include="Controller.cs" />
-    <Compile Include="ControllerBase.cs" />
-    <Compile Include="IApp.cs" />
-    <Compile Include="Json.cs" />
+    <Compile Include="JsonResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Router.cs" />
   </ItemGroup>
