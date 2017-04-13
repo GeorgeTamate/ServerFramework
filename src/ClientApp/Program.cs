@@ -50,6 +50,19 @@ namespace ClientApp
                                 e.Response.StatusCode = result.StatusCode;
                                 e.Response.StatusDescription = result.StatusDescription;
 
+                                if (result.Cookie != null)
+                                {
+                                    var cookie = (HttpCookie)result.Cookie;
+                                    foreach (string key in e.Response.Cookies.AllKeys)
+                                    {
+                                        if (key.Equals(cookie.Name))
+                                        {
+                                            e.Response.Cookies.Remove(cookie.Name);
+                                        }
+                                    }
+                                    e.Response.Cookies.Add(cookie);
+                                }
+
                                 writer.Write(result.Content);
                             }
                         }

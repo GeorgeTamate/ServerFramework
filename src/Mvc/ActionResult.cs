@@ -9,7 +9,7 @@ namespace Mvc
             StatusDescription = "OK";
             ContentType = "text/html";
             Content = null;
-            Context = null;
+            Cookie = null;
         }
 
         protected ActionResult(string contentType) : this()
@@ -31,6 +31,6 @@ namespace Mvc
 
         public string Content { get; set; }
 
-        public object Context { get; set; }
+        public object Cookie { get; set; }
     }
 }

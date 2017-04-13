@@ -56,7 +56,7 @@ namespace Mvc
             }
 
             if (type == null)
-                return new Controller().NotFound("Controller not Found.");
+                return new Controller().NotFoundResult("Controller not Found.");
 
             var instance = Activator.CreateInstance(type);
             Console.WriteLine("   + Controller: {0}", instance.GetType().ToString());
@@ -64,7 +64,7 @@ namespace Mvc
             ((Controller)instance).Context = context;
 
             if (ActionName == null)
-                return new Controller().NotFound("No action specified.");
+                return new Controller().NotFoundResult("No action specified.");
 
             Type httpMethodType;
             MethodInfo[] methodInfos = instance.GetType().GetMethods();
@@ -84,7 +84,7 @@ namespace Mvc
                 }
             }
 
-            return new Controller().NotFound("Action not Found.");
+            return new Controller().NotFoundResult("Action not Found.");
         }
 
         public string ControllerName { get; set; }

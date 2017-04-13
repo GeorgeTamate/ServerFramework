@@ -39,7 +39,6 @@ namespace App1
             result.Content = View(layoutPath, partialPath, new object());
 
             return result;
-
         }
 
         [HttpPOST]
@@ -53,6 +52,37 @@ namespace App1
                 json[param.Key] = param.Value;
             }
             result.Content = json.ToString();
+
+            return result;
+        }
+
+        [HttpGET]
+        public ActionResult Register()
+        {
+            string layoutPath = Directory.GetCurrentDirectory() + "/../../../../view/layout.html";
+            string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/register.html";
+            var result = new ActionResult();
+            result.Content = View(layoutPath, partialPath, new object());
+
+            return result;
+        }
+
+        [HttpPOST]
+        public ActionResult RegisterPost()
+        {
+            var result = new JsonResult();
+            var json = new JObject();
+            var parameters = PostParams();
+            foreach (var param in parameters)
+            {
+                json[param.Key] = param.Value;
+            }
+            result.Content = json.ToString();
+
+            if(!json["password"].Equals(json["confirm"]))
+            {
+                return UnauthorizedResult("Passwords are not the same.");
+            }
 
             return result;
         }
