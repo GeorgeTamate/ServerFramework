@@ -5,11 +5,6 @@ namespace App1
 {
     public class Application1 : Application
     {
-        //public void Start()
-        //{
-        //    Console.WriteLine("-- ## Reflection Start!");
-        //}
-
         public override object ExecuteAction(object request, object context)
         {
             string path = ParsePath(request);
@@ -33,11 +28,5 @@ namespace App1
 
             return result;
         }
-
-        //public string Name
-        //{
-        //    get { return "app"; }
-        //    set { Console.WriteLine(" ## ** Application1.Name: set yet to be implemented."); }
-        //}
     }
 }

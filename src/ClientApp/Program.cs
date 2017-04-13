@@ -3,7 +3,6 @@ using System.Configuration;
 using PHttp;
 using System.IO;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Mvc;
 
 namespace ClientApp
@@ -18,38 +17,23 @@ namespace ClientApp
             Console.WriteLine();
 
             string path = ConfigurationManager.AppSettings["ApplicationsDir"].ToString();
-            // Console.WriteLine("Path directory: {0}", path);
 
             var startupApps = new Startup(path);
-            // startupApps.LoadApps1();
 
             PHttpConfigManager config = new PHttpConfigManager(ConfigurationManager.AppSettings["ConfigDir"].ToString());
 
             startupApps.LoadApps(config);
 
-            //Console.WriteLine("Press any key to start server...");//
-            //Console.ReadKey();//
-            //Console.WriteLine();
+            Console.WriteLine("Press any key to start server...");//
+            Console.ReadKey();
 
-            //////////////////////////////////////////////////////////////////
-
-            using (var server = new HttpServer(config.Port)) //TODO 
+            using (var server = new HttpServer(config.Port)) //TODO using (var server = new HttpServer("0.0.0.0", config.Port))
             {
                 #region Request Received
-
-                // New requests are signaled through the RequestReceived
-                // event.
+                
 
                 server.RequestReceived += (s, e) =>
                 {
-                    // The response must be written to e.Response.OutputStream.
-                    // When writing text, a StreamWriter can be used.
-
-                    //using (var writer = new StreamWriter(e.Response.OutputStream))
-                    //{
-                    //    writer.Write("Hello world!");
-                    //}
-
                     string filePath = ConfigurationManager.AppSettings["FilesDir"].ToString() + e.Request.Path;
                     string resourcePath;
                     ActionResult result = null;
@@ -104,60 +88,6 @@ namespace ClientApp
 
                         }
                     }
-                    
-
-                    #region old way
-                    //if (File.Exists(filePath)) // When requested file exists
-                    //{
-                    //    using (var stream = File.Open(filePath, FileMode.Open))
-                    //    {
-                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(e.Request.Path));
-                    //        byte[] buffer = new byte[4096];
-                    //        int read;
-
-                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
-                    //        {
-                    //            e.Response.OutputStream.Write(buffer, 0, read);
-                    //        }
-                    //    }
-                    //}
-                    //else if (e.Request.Path.Equals("/") || e.Request.Path.Equals("/home")) // Displays home page
-                    //{
-                    //    resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/Home.html";
-                    //    using (var stream = File.Open(resourcePath, FileMode.Open))
-                    //    {
-                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
-                    //        byte[] buffer = new byte[4096];
-                    //        int read;
-
-                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
-                    //        {
-                    //            e.Response.OutputStream.Write(buffer, 0, read);
-                    //        }
-                    //    }
-                    //}
-                    //else if (e.Request.Path.Equals("/favicon.ico")) // when favicon.ico request comes up
-                    //{
-                    //    // Do nothing
-                    //}
-                    //else // When nothing else worked (resource not found)
-                    //{
-                    //    resourcePath = ConfigurationManager.AppSettings["ResourcesDir"].ToString() + "/NotFound.html";
-                    //    using (var stream = File.Open(resourcePath, FileMode.Open))
-                    //    {
-                    //        e.Response.ContentType = GetMimeType(Path.GetExtension(resourcePath));
-                    //        e.Response.StatusCode = 404;
-                    //        e.Response.StatusDescription = "Not Found";
-                    //        byte[] buffer = new byte[4096];
-                    //        int read;
-
-                    //        while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
-                    //        {
-                    //            e.Response.OutputStream.Write(buffer, 0, read);
-                    //        }
-                    //    }
-                    //}
-                    #endregion
 
                 };
 
@@ -174,28 +104,19 @@ namespace ClientApp
                     Console.WriteLine();
                 };
 
-                // Start the server on a random port. Use server.EndPoint
-                // to specify a specific port, e.g.:
-                //
-                //     server.EndPoint = new IPEndPoint(IPAddress.Loopback, 80);
-                //
-
                 server.Start();
-
-                // Start the default web browser.
 
                 //Process.Start(String.Format("http://{0}/", server.EndPoint));
 
-                //Console.WriteLine("Press any key to stop server...");
-                //Console.ReadKey();
+                Console.WriteLine("Press any key to stop server...");
+                Console.ReadKey();
 
-                //// When the HttpServer is disposed, all opened connections
-                //// are automatically closed.
+                server.Stop();
 
-                //server.Stop();
+                //while (true) { }
 
-                //Console.WriteLine("Press any key to exit...");
-                //Console.ReadKey();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
             }
         }
 
