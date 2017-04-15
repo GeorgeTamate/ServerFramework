@@ -1,4 +1,5 @@
 ﻿using PHttp;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -102,6 +103,15 @@ namespace Mvc
                 }
             }
             return null;
+        }
+
+        protected void PrintCookies()
+        {
+            Console.WriteLine("COOKIES");
+            foreach (var key in _request.Cookies.AllKeys)
+            {
+                Console.WriteLine("Key: {0} | Value: {1}", key, _request.Cookies.Get(key).Value);
+            }
         }
 
         public object Request

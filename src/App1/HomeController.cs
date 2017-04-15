@@ -1,7 +1,12 @@
 ﻿using Mvc;
 using Mvc.Attributes;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using JWT;
+using JWT.Serializers;
+using JWT.Algorithms;
 
 namespace App1
 {
@@ -25,6 +30,8 @@ namespace App1
             string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/about.html";
             var result = new ActionResult();
             result.Content = View(layoutPath, partialPath, new object());
+
+            PrintCookies();//TODO
 
             return result;
 
@@ -51,6 +58,31 @@ namespace App1
             {
                 json[param.Key] = param.Value;
             }
+
+            string username = json["username"].ToString();
+            string password = json["password"].ToString();
+
+            var payload = new Dictionary<string, object>
+            {
+                { "username", username },
+                { "password", password }
+            };
+            string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
+            string name = "ShortApp1";
+
+            IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
+            IJsonSerializer serializer = new JsonNetSerializer();
+            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
+            IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
+
+            var token = encoder.Encode(payload, secret);
+            Console.WriteLine("TOKEN: {0}", token);
+
+
+            //TODO
+
+
+            result.Cookie = BuildCookieObject(name, token);
             result.Content = json.ToString();
 
             return result;
