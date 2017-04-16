@@ -22,16 +22,23 @@ namespace PHttp
 
         #region Constructors
 
-        public HttpServer()
-            : this(0)
+        public HttpServer() : this(0)
         {
         }
 
-        public HttpServer(int port)
+        public HttpServer(int port) : this(IPAddress.Loopback, port)
+        {
+        }
+
+        public HttpServer(string ipAddress, int port) : this(IPAddress.Parse(ipAddress), port)
+        {
+        }
+
+        public HttpServer(IPAddress ipAddress,int port)
         {
             Port = port;
             State = HttpServerState.Stopped;
-            EndPoint = new IPEndPoint(IPAddress.Loopback, Port);
+            EndPoint = new IPEndPoint(ipAddress, Port);
             ReadBufferSize = 4096;
             WriteBufferSize = 4096;
             ShutdownTimeout = TimeSpan.FromSeconds(30);

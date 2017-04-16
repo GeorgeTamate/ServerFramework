@@ -1,10 +1,10 @@
 {
-    "resourcesPath": "",
-    "layout": "partial.html",
-    "partial": [
-        "partial.html",
-        "about.html"
-    ],
-    "connectionString": ""
-
+  "resourcesPath": "",
+  "layout": "partial.html",
+  "partial": [
+    "partial.html",
+    "about.html"
+  ],
+  "connectionString": "",
+  "dbPath": "C:\\Users\\carme\\Desktop\\webadv\\ServerFramework\\db\\App1db.sqlite"
 }

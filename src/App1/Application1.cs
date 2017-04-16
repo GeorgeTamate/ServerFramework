@@ -1,14 +1,24 @@
 ﻿using System;
 using Mvc;
+using System.IO;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace App1
 {
     public class Application1 : Application
     {
-        //public void Start()
-        //{
-        //    Console.WriteLine("-- ## Reflection Start!");
-        //}
+        private DBHelper _db;
+
+        public override void Start()
+        {
+            Console.WriteLine("   + App1 | Starting...");
+            string configPath = Directory.GetCurrentDirectory() + "/../../../../App1Config.json";
+            JObject configJson = JsonConvert.DeserializeObject(File.ReadAllText(configPath)) as JObject;
+            _db = new DBHelper(configJson["dbPath"].ToString());
+            _db.CreateDatabase();
+            Console.WriteLine("   + App1 | Started!");
+        }
 
         public override object ExecuteAction(object request, object context)
         {
@@ -21,7 +31,7 @@ namespace App1
             Console.WriteLine("   + Path: {0}", path);
 
             var router = new Router(path);
-            var result = router.CallAction(GetType(), request, context);
+            var result = router.CallAction(GetType(), request, context, _db);
 
             if (result == null)
                 return new HomeController().Index();
@@ -33,11 +43,5 @@ namespace App1
 
             return result;
         }
-
-        //public string Name
-        //{
-        //    get { return "app"; }
-        //    set { Console.WriteLine(" ## ** Application1.Name: set yet to be implemented."); }
-        //}
     }
 }

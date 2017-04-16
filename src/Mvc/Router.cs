@@ -40,6 +40,11 @@ namespace Mvc
 
         public ActionResult CallAction(Type currentType, object request, object context)
         {
+            return CallAction(currentType, request, context, null);
+        }
+
+        public ActionResult CallAction(Type currentType, object request, object context, object aux)
+        {
             var assembly = currentType.Assembly;
             Type type = null;
 
@@ -56,15 +61,19 @@ namespace Mvc
             }
 
             if (type == null)
-                return new Controller().NotFound("Controller not Found.");
+                return new Controller().NotFoundResult("Controller not Found.");
 
             var instance = Activator.CreateInstance(type);
             Console.WriteLine("   + Controller: {0}", instance.GetType().ToString());
             ((Controller)instance).Request = request;
             ((Controller)instance).Context = context;
+            ((Controller)instance).Aux = null;
+            if (aux != null)
+                ((Controller)instance).Aux = aux;
+
 
             if (ActionName == null)
-                return new Controller().NotFound("No action specified.");
+                return new Controller().NotFoundResult("No action specified.");
 
             Type httpMethodType;
             MethodInfo[] methodInfos = instance.GetType().GetMethods();
@@ -84,7 +93,7 @@ namespace Mvc
                 }
             }
 
-            return new Controller().NotFound("Action not Found.");
+            return new Controller().NotFoundResult("Action not Found.");
         }
 
         public string ControllerName { get; set; }

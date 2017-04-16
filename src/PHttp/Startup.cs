@@ -143,6 +143,12 @@ namespace PHttp
                 Console.WriteLine("   + Instance Type: {0} | App Virtual Path: {1}", ins.Value.ToString(), ins.Key);
             }
 
+            Console.WriteLine("-- Starting Applications...");
+            foreach (var ins in _instances)
+            {
+                ins.Value.Start();
+            }
+
             Console.WriteLine("-- Done!");
             Console.WriteLine("-");
         }
