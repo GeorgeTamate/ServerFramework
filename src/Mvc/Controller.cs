@@ -126,6 +126,8 @@ namespace Mvc
             set { _context = (HttpContext)value; }
         }
 
+        public object Aux { get; set; }
+
         public Router Route { get; set; }
 
         public Dictionary<string, string> Session { get; set; }

@@ -40,6 +40,11 @@ namespace Mvc
 
         public ActionResult CallAction(Type currentType, object request, object context)
         {
+            return CallAction(currentType, request, context, null);
+        }
+
+        public ActionResult CallAction(Type currentType, object request, object context, object aux)
+        {
             var assembly = currentType.Assembly;
             Type type = null;
 
@@ -62,6 +67,10 @@ namespace Mvc
             Console.WriteLine("   + Controller: {0}", instance.GetType().ToString());
             ((Controller)instance).Request = request;
             ((Controller)instance).Context = context;
+            ((Controller)instance).Aux = null;
+            if (aux != null)
+                ((Controller)instance).Aux = aux;
+
 
             if (ActionName == null)
                 return new Controller().NotFoundResult("No action specified.");
