@@ -6,6 +6,9 @@ using Newtonsoft.Json.Linq;
 
 namespace PHttp
 {
+    /// <summary>
+    /// Struct that represents the configuration to be loaded for an application.
+    /// </summary>
     public struct Site
     {
         public string Name;
@@ -16,14 +19,25 @@ namespace PHttp
         public Dictionary<int, string> ErrorPages;
     }
 
+    /// <summary>
+    /// Class to load the configuration for the server and the applications it hosts.
+    /// </summary>
     public class PHttpConfigManager
     {
         private string _path;
 
+        /// <summary>
+        /// Constructor with default path to configuration file.
+        /// </summary>
         public PHttpConfigManager() : 
             this(Directory.GetCurrentDirectory() + "/../../../../config.json")//debug/bin/client/ServerFramework
         { }
 
+
+        /// <summary>
+        /// Constructor with custom path to confuguration file.
+        /// </summary>
+        /// <param name="configFilePath">Path to the configuration file.</param>
         public PHttpConfigManager(string configFilePath)
         {
             if (!File.Exists(configFilePath))
@@ -39,6 +53,9 @@ namespace PHttp
             Init();
         }
 
+        /// <summary>
+        /// Initiates the server configuration and applications configuration.
+        /// </summary>
         private void Init()
         {
             Console.WriteLine("+-+-+ INITIATING CONFIGURATION MANAGER +-+-+");
@@ -107,6 +124,11 @@ namespace PHttp
             Console.WriteLine("-");
         }
 
+        /// <summary>
+        /// Finds the text content of default document files.
+        /// </summary>
+        /// <param name="path">path to the document.</param>
+        /// <returns>Text content of the document.</returns>
         public string FindDefaultDocumentText(string path)
         {
             foreach (var document in DefaultDocument)
@@ -119,6 +141,11 @@ namespace PHttp
             return null;
         }
 
+        /// <summary>
+        /// Finds the name of default document files.
+        /// </summary>
+        /// <param name="path">path to the document.</param>
+        /// <returns>Name of the document.</returns>
         public string FindDefaultDocumentFileName(string path)
         {
             foreach (var document in DefaultDocument)
@@ -131,6 +158,11 @@ namespace PHttp
             return null;
         }
 
+        /// <summary>
+        /// Finds the text content of error pages files.
+        /// </summary>
+        /// <param name="path">path to the error pages.</param>
+        /// <returns>Text content of the error pages.</returns>
         public string FindErrorPageText(int statusCode, string path)
         {
             foreach (var page in ErrorPages)
@@ -143,6 +175,11 @@ namespace PHttp
             return null;
         }
 
+        /// <summary>
+        /// Finds the name of error pages files.
+        /// </summary>
+        /// <param name="path">path to the error page.</param>
+        /// <returns>Name of the error page.</returns>
         public string FindErrorPageFileName(int statusCode)
         {
             string fileName = null;

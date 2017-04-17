@@ -4,18 +4,28 @@ using System.IO;
 
 namespace App1
 {
+    /// <summary>
+    /// Class to manage database transactions.
+    /// </summary>
     public class DBHelper
     {
         private string _connString;
         private object _mutex = new object();
         private string _path;
 
+        /// <summary>
+        /// Constructor of the class.
+        /// </summary>
+        /// <param name="path">Path where to SQLite database file is located.</param>
         public DBHelper(string path)
         {
             _path = path;
             _connString = "Data Source=" + path + ";Version=3;";
         }
 
+        /// <summary>
+        /// Method that creates the database for the application.
+        /// </summary>
         public void CreateDatabase()
         {
             if (!File.Exists(_path))
@@ -33,6 +43,10 @@ namespace App1
             }
         }
 
+        /// <summary>
+        /// Method that creates shortened link table.
+        /// </summary>
+        /// <param name="dbConn">Connection object to connect to database.</param>
         private void CreateLinksTable(SQLiteConnection dbConn)
         {
             var tableExistsQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name='links';";
@@ -52,6 +66,10 @@ namespace App1
             }
         }
 
+        /// <summary>
+        /// Method that creates users table.
+        /// </summary>
+        /// <param name="dbConn">Connection object to connect to database.</param>
         private void CreateUsersTable(SQLiteConnection dbConn)
         {
             var tableExistsQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name='users';";
@@ -71,6 +89,12 @@ namespace App1
             }
         }
 
+        /// <summary>
+        /// Method that inserts a user to the database.
+        /// </summary>
+        /// <param name="username">Username of the user.</param>
+        /// <param name="password">Password of the user.</param>
+        /// <param name="secret">Secret of the user.</param>
         public void CreateUser(string username, string password, string secret)
         {
             lock (_mutex)
@@ -87,6 +111,11 @@ namespace App1
             }
         }
 
+        /// <summary>
+        /// Method that finds a user in the database.
+        /// </summary>
+        /// <param name="username">Username of the user.</param>
+        /// <returns>User object.</returns>
         public dynamic GetUser(string username)
         {
             dynamic user = null;
@@ -117,6 +146,11 @@ namespace App1
             return user;
         }
 
+        /// <summary>
+        /// Method that finds a user in the database.
+        /// </summary>
+        /// <param name="secret">Secret of the user.</param>
+        /// <returns>User object.</returns>
         public dynamic GetUserBySecret(string secret)
         {
             dynamic user = null;
@@ -147,6 +181,12 @@ namespace App1
             return user;
         }
 
+        /// <summary>
+        /// Method that inserts a link to the database.
+        /// </summary>
+        /// <param name="shortlink">Shortened link.</param>
+        /// <param name="link">Original link</param>
+        /// <param name="username">Username of the user that made the request.</param>
         public void CreateLink(string shortlink, string link, string username)
         {
             lock (_mutex)
@@ -163,6 +203,11 @@ namespace App1
             }
         }
 
+        /// <summary>
+        /// Method that gets the 
+        /// </summary>
+        /// <param name="shortlink"></param>
+        /// <returns></returns>
         public string GetLink(string shortlink)
         {
             string link = null;
@@ -188,6 +233,11 @@ namespace App1
             return link;
         }
 
+        /// <summary>
+        /// Method that deletes a shortened URL.
+        /// </summary>
+        /// <param name="shortlink">Shortened URL</param>
+        /// <param name="username">Username of the user which made the delete request</param>
         public void DeleteLink(string shortlink, string username)
         {
             lock (_mutex)

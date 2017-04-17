@@ -10,10 +10,17 @@ using JWT.Algorithms;
 
 namespace App1
 {
+    /// <summary>
+    /// Class that represents the main controller of the application.
+    /// </summary>
     public class HomeController : Controller
     {
         #region Basic EndPoints
 
+        /// <summary>
+        /// Default action method of the controller.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult Index()
         {
@@ -25,6 +32,10 @@ namespace App1
             return result;
         }
 
+        /// <summary>
+        /// Action method that provides information about the application.
+        /// </summary>        
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult About()
         {
@@ -39,6 +50,10 @@ namespace App1
 
         }
 
+        /// <summary>
+        /// Action method that provides information about the application in JSON format.
+        /// </summary>        
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult Json()
         {
@@ -53,149 +68,15 @@ namespace App1
             return result;
         }
 
+        /// <summary>
+        /// Action method that responds with a greeting message in text format.
+        /// </summary>        
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult Text()
         {
             var result = new ContentResult();
             result.Content = "Hello App1 !";
-
-            return result;
-        }
-
-        #endregion
-
-        #region Login
-
-        [HttpGET]
-        public ActionResult Login()
-        {
-            string layoutPath = Directory.GetCurrentDirectory() + "/../../../../view/layout.html";
-            string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/login.html";
-            var result = new ActionResult();
-            result.Content = View(layoutPath, partialPath, new object());
-
-            return result;
-        }
-
-        [HttpPOST]
-        public ActionResult LoginPost()
-        {
-            // Parsing parameters from body
-            var result = new JsonResult();
-            var json = new JObject();
-            var parameters = PostParams();
-            foreach (var param in parameters)
-            {
-                json[param.Key] = param.Value;
-            }
-
-            string username = json["username"].ToString();
-            string password = json["password"].ToString();
-
-            DBHelper db = Aux as DBHelper;
-
-            // Checking if user exists and if password is correct
-            dynamic user = db.GetUser(username);
-            if (user == null)
-            {
-                return UnauthorizedResult("This user does not exist.");
-            }
-            else if (!password.Equals(user.password))
-            {
-                return UnauthorizedResult("Invalid Password.");
-            }
-
-            // Creating and Encodin JWT token
-            var payload = new Dictionary<string, object>
-            {
-                { "username", username },
-                { "password", password }
-            };
-            string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
-            string name = "ShortApp1";
-
-            IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
-            IJsonSerializer serializer = new JsonNetSerializer();
-            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-            IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
-
-            var token = encoder.Encode(payload, secret);
-            Console.WriteLine("TOKEN: {0}", token);
-
-            // Building cookie with JWT token
-            result.Cookie = BuildCookieObject(name, token);
-            result.Content = json.ToString();
-
-            return result;
-        }
-
-        #endregion
-
-        #region Register
-
-        [HttpGET]
-        public ActionResult Register()
-        {
-            string layoutPath = Directory.GetCurrentDirectory() + "/../../../../view/layout.html";
-            string partialPath = Directory.GetCurrentDirectory() + "/../../../../view/register.html";
-            var result = new ActionResult();
-            result.Content = View(layoutPath, partialPath, new object());
-
-            return result;
-        }
-
-        [HttpPOST]
-        public ActionResult RegisterPost()
-        {
-            // Parsing parameters from body
-            var result = new JsonResult();
-            var json = new JObject();
-            var parameters = PostParams();
-            foreach (var param in parameters)
-            {
-                json[param.Key] = param.Value;
-            }
-
-            // Checking if passwords are the same
-            if (!json["password"].Equals(json["confirm"]))
-            {
-                return UnauthorizedResult("Passwords are not the same.");
-            }
-
-            string username = json["username"].ToString();
-            string password = json["password"].ToString();
-            
-            DBHelper db = Aux as DBHelper;
-
-            // Checking if user already exists
-            if (db.GetUser(username) != null)
-            {
-                return UnauthorizedResult("This user already exists.");
-            }
-
-            // Creating and Encodin JWT token
-            var payload = new Dictionary<string, object>
-            {
-                { "username", username },
-                { "password", password }
-            };
-            string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
-            string name = "ShortApp1";
-
-            IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
-            IJsonSerializer serializer = new JsonNetSerializer();
-            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-            IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
-
-            var token = encoder.Encode(payload, secret);
-            Console.WriteLine("TOKEN: {0}", token);
-
-            // Inserting new user into Database
-            db.CreateUser(username, password, token.Split('.')[2]);
-
-            // Building cookie with JWT token
-            result.Cookie = BuildCookieObject(name, token);
-            result.Content = json.ToString();
 
             return result;
         }

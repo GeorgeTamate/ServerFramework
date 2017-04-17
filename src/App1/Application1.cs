@@ -6,10 +6,16 @@ using Newtonsoft.Json;
 
 namespace App1
 {
+    /// <summary>
+    /// Class that is intanciated to use application.
+    /// </summary>
     public class Application1 : Application
     {
         private DBHelper _db;
 
+        /// <summary>
+        /// Method to be called when initiating application.
+        /// </summary>
         public override void Start()
         {
             Console.WriteLine("   + App1 | Starting...");
@@ -20,6 +26,12 @@ namespace App1
             Console.WriteLine("   + App1 | Started!");
         }
 
+        /// <summary>
+        /// Method to be called when sending requests to the application.
+        /// </summary>
+        /// <param name="request">Object representing the HTTP request.</param>
+        /// <param name="context">Object representing the context of the client making the request.</param>
+        /// <returns>Object that carries the response to the request.</returns>
         public override object ExecuteAction(object request, object context)
         {
             string path = ParsePath(request);
