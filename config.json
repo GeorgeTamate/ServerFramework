@@ -23,7 +23,7 @@
     "sites": [
         {
             "name": "App1",
-            "physicalPath": "C:\\Users\\carme\\Desktop\\webadv\\ServerFramework\\src\\App1\\bin\\Debug",
+            "physicalPath": "/home/george/ServerFramework/src/App1/bin/Debug",
             "virtualPath": "app",
             "directoryBrowsing": false,
             "defaultDocument": [],
