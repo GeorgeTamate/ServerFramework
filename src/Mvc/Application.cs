@@ -4,15 +4,27 @@ using PHttp;
 
 namespace Mvc
 {
+    /// <summary>
+    /// Application base class.
+    /// </summary>
     public class Application : IPHttpApplication
     {
         string virtualPath = "";
 
+        /// <summary>
+        /// Method to be called when initiating application.
+        /// </summary>
         public virtual void Start()
         {
             Console.WriteLine("## Reflection Start!");
         }
 
+        /// <summary>
+        /// Method to be called when sending requests to the application.
+        /// </summary>
+        /// <param name="request">Object representing the HTTP request.</param>
+        /// <param name="context">Object representing the context of the client making the request.</param>
+        /// <returns>Object that carries the response to the request.</returns>
         public virtual object ExecuteAction(object request, object context)
         {
             Console.WriteLine("## Reflection ExecuteAction!");

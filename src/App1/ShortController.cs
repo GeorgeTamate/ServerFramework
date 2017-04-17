@@ -10,10 +10,17 @@ using System.IO;
 
 namespace App1
 {
+    /// <summary>
+    /// Class that represents the controller for the main functionalities of the application.
+    /// </summary>
     public class ShortController : Controller
     {
         #region Login
 
+        /// <summary>
+        /// Action method that respondes with a view for logging in.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult Login()
         {
@@ -25,6 +32,10 @@ namespace App1
             return result;
         }
 
+        /// <summary>
+        /// Action method that responds with the login results.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpPOST]
         public ActionResult LoginPost()
         {
@@ -81,6 +92,10 @@ namespace App1
 
         #region Register
 
+        /// <summary>
+        /// Action method that respondes with a view for creating a new user.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult Register()
         {
@@ -92,6 +107,10 @@ namespace App1
             return result;
         }
 
+        /// <summary>
+        /// Action method that responds with the user creation results.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpPOST]
         public ActionResult RegisterPost()
         {
@@ -152,6 +171,10 @@ namespace App1
 
         #region Create
 
+        /// <summary>
+        /// Action method to create a shortened URL.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult Create()
         {
@@ -183,6 +206,10 @@ namespace App1
             return result;
         }
 
+        /// <summary>
+        /// Action method that responds with the shortened URL creation results.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpPOST]
         public ActionResult CreatePost()
         {
@@ -206,8 +233,8 @@ namespace App1
 
             string link = json["link"].ToString();
             string shortlink = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Split('=')[0];
-            //json["short"] = "http://127.0.0.1:8085/app/" + shortlink;
-            json["short"] = "http://45.55.77.201:8085/app/" + shortlink;
+            json["short"] = "http://127.0.0.1:8085/app/" + shortlink;
+            //json["short"] = "http://45.55.77.201:8085/app/" + shortlink;
 
             if (user != null)
             {
@@ -227,6 +254,10 @@ namespace App1
 
         #region Delete
 
+        /// <summary>
+        /// Action method to delete a shortened URL.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult Delete()
         {
@@ -257,6 +288,10 @@ namespace App1
             return result;
         }
 
+        /// <summary>
+        /// Action method that responds with the shortened URL deletion results.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpPOST]
         public ActionResult DeletePost()
         {
@@ -292,6 +327,10 @@ namespace App1
 
         #endregion
 
+        /// <summary>
+        /// Action method that logs out the logged in user.
+        /// </summary>
+        /// <returns>Response as an action result.</returns>
         [HttpGET]
         public ActionResult Logout()
         {
@@ -303,6 +342,12 @@ namespace App1
             return result;
         }
 
+        /// <summary>
+        /// Action method that returns the original URL to redirect to based in the shortened URL.
+        /// </summary>
+        /// <param name="url">Shortened URL.</param>
+        /// <param name="db">Database Helper instance to look for the original URL.</param>
+        /// <returns>Response as an action result.</returns>
         public ActionResult Redirect(string url, DBHelper db)
         {
             var result = new ActionResult();

@@ -6,79 +6,17 @@ using System.Reflection;
 
 namespace PHttp
 {
+    /// <summary>
+    /// Class that initializes the applications to be hosted by the server.
+    /// </summary>
     public class Startup
     {
-        private string _path = null;
-        //private List<IPHttpApplication> _instances = new List<IPHttpApplication>();
         private Dictionary<string, IPHttpApplication> _instances = new Dictionary<string, IPHttpApplication>();
 
-        public Startup(string path)
-        {
-            _path = path;
-        }
-
-        public void LoadApps1()
-        {
-            if (string.IsNullOrEmpty(_path))
-            {
-                Console.WriteLine("** Startup._path field is null or empty.");
-                return;
-            } //sanity check
-            Console.WriteLine("-- Path entry recieved.");
-
-            DirectoryInfo info = new DirectoryInfo(_path);
-
-            if (!info.Exists)
-            {
-                Console.WriteLine("** Path in Startup._path does not exist.");
-                return;
-            } //make sure directory exists
-            Console.WriteLine("-- Path in Startup._path found.");
-
-            var instanceList = new List<IPHttpApplication>(); //list of applications compatible with IPHttpApplication
-
-            foreach (FileInfo file in info.GetFiles("*.dll")) //loop through all dll files in directory
-            {
-                Assembly currentAssembly = null;
-                try
-                {
-                    var name = AssemblyName.GetAssemblyName(file.FullName);
-                    currentAssembly = Assembly.Load(name);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("** Failed to load Assembly for FileInfo: {0}", file.FullName);
-                    continue;
-                }
-
-                var types = currentAssembly.GetTypes();
-                foreach(Type t in types)
-                {
-                    if(t != typeof(IPHttpApplication) && typeof(IPHttpApplication).IsAssignableFrom(t))
-                    {
-                        instanceList.Add((IPHttpApplication)Activator.CreateInstance(t));
-                    }
-                }
-
-                //currentAssembly.GetTypes()
-                //    .Where(t => t != typeof(IPHttpApplication) && typeof(IPHttpApplication).IsAssignableFrom(t)) //type cannot be IPHttpApplication, but has to be compatible with it.
-                //    .ToList()
-                //    .ForEach(x => instanceList.Add((IPHttpApplication)Activator.CreateInstance(x))); //instanciate and add to list of types.
-            }
-
-            Console.WriteLine("-- Apps Loading Complete!");
-            Console.WriteLine("   Calling Start() method for every type instance in list:");
-
-            foreach (var ins in instanceList)
-            {
-                Console.Write("   + Name: {0} | Start(): ", ins.Name);
-                ins.Start();
-            }
-
-            Console.WriteLine("-- Done!");
-        }
-
-
+        /// <summary>
+        /// Method that loads and initializes the applications.
+        /// </summary>
+        /// <param name="config">Configuration of server and applications.</param>
         public void LoadApps(PHttpConfigManager config)
         {
             DirectoryInfo info;
@@ -153,6 +91,12 @@ namespace PHttp
             Console.WriteLine("-");
         }
 
+        /// <summary>
+        /// Method that invokes the ExecuteAction method of loaded applications.
+        /// </summary>
+        /// <param name="request">Request to send to application.</param>
+        /// <param name="context">Context of the client making the request.</param>
+        /// <returns>Response from the application.</returns>
         public object InvokeApp(HttpRequest request, HttpContext context)
         {
             object result = null;

@@ -6,6 +6,9 @@ using PHttp;
 
 namespace Mvc
 {
+    /// <summary>
+    /// Class to enroute application requests.
+    /// </summary>
     public class Router
     {
         private readonly Dictionary<string, Type> _methodAttributes
@@ -17,6 +20,10 @@ namespace Mvc
                 { "DELETE", typeof(HttpDELETE) }
             };
 
+        /// <summary>
+        /// Constructor of the class
+        /// </summary>
+        /// <param name="path">Path representing the request Url.</param>
         public Router(string path)
         {
             ControllerName = null;
@@ -38,11 +45,25 @@ namespace Mvc
             }
         }
 
+        /// <summary>
+        /// Method that calls a method of an application.
+        /// </summary>
+        /// <param name="currentType">Type of the application.</param>
+        /// <param name="request">Request object to send to application.</param>
+        /// <param name="context">Context of the client that made the request.</param>
+        /// <returns>Response by the application.</returns>
         public ActionResult CallAction(Type currentType, object request, object context)
         {
             return CallAction(currentType, request, context, null);
         }
 
+        /// <summary>
+        /// Method that calls a method of an application.
+        /// </summary>
+        /// <param name="currentType">Type of the application.</param>
+        /// <param name="request">Request object to send to application.</param>
+        /// <param name="aux">Auxiliar object that the application may need as utility.</param>
+        /// <returns>Response by the application.</returns>
         public ActionResult CallAction(Type currentType, object request, object context, object aux)
         {
             var assembly = currentType.Assembly;
