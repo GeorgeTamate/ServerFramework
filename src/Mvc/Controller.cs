@@ -95,11 +95,11 @@ namespace Mvc
 
         protected string CookieValue(string name)
         {
-            foreach (HttpCookie cookie in _context.Request.Cookies)
+            foreach (var key in _request.Cookies.AllKeys)
             {
-                if (cookie.Name.Equals(name))
+                if (key.Equals(name))
                 {
-                    return cookie.Value;
+                    return _request.Cookies.Get(key).Value;
                 }
             }
             return null;

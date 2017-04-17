@@ -1,0 +1,11 @@
+<h1>Create</h1>
+{{#if Model.username}}
+<br>
+<h1>USER: {{Model.username}}</h1>
+{{/if}}
+
+<form action="createpost" method="POST">
+    URL to shorten: <input type="text" name="link">
+    <br>
+    <input type="submit" value="Submit">
+</form>

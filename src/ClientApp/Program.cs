@@ -42,7 +42,6 @@ namespace ClientApp
                     if (!e.Request.Path.Equals("/favicon.ico")) // when not favicon.ico
                     {
                         result = (ActionResult)startupApps.InvokeApp(e.Request, e.Context);
-
                         if (result != null)
                         {
                             using (var writer = new StreamWriter(e.Response.OutputStream))
@@ -64,16 +63,29 @@ namespace ClientApp
                                     e.Response.Cookies.Add(cookie);
                                 }
 
-                                writer.Write(result.Content);
+                                if (result.Redirect == null)
+                                {
+                                    writer.Write(result.Content);
+                                }
+                                else
+                                {
+                                    e.Response.Redirect(result.Redirect);
+                                }
+
                             }
                         }
-                        else if (e.Request.Path.Equals("/login") && e.Request.HttpMethod.Equals("POST"))
+                        else if (File.Exists(filePath)) // When requested file exists
                         {
-                            Console.WriteLine(e.Request.Form.Get("username"));
-                            Console.WriteLine(e.Request.Form.Get("password"));
-                            using (var writer = new StreamWriter(e.Response.OutputStream))
+                            using (var stream = File.Open(filePath, FileMode.Open))
                             {
-                                writer.Write("LOGIN!");
+                                e.Response.ContentType = GetMimeType(Path.GetExtension(e.Request.Path));
+                                byte[] buffer = new byte[4096];
+                                int read;
+
+                                while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                                {
+                                    e.Response.OutputStream.Write(buffer, 0, read);
+                                }
                             }
                         }
                         else if (e.Request.Path.Equals("/"))
