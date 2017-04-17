@@ -206,8 +206,8 @@ namespace App1
 
             string link = json["link"].ToString();
             string shortlink = Convert.ToBase64String(Guid.NewGuid().ToByteArray()).Split('=')[0];
-            json["short"] = "http://127.0.0.1:8085/app/" + shortlink;
-            //json["short"] = "http://45.55.77.201:8085/app/" + shortlink;
+            //json["short"] = "http://127.0.0.1:8085/app/" + shortlink;
+            json["short"] = "http://45.55.77.201:8085/app/" + shortlink;
 
             if (user != null)
             {

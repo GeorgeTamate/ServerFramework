@@ -24,13 +24,14 @@ namespace ClientApp
 
             startupApps.LoadApps(config);
 
-            Console.WriteLine("Press any key to start server...");//
-            Console.ReadKey();
+            //Console.WriteLine("Press any key to start server...");//
+            //Console.ReadKey();
 
-            using (var server = new HttpServer(config.Port)) //TODO using (var server = new HttpServer("0.0.0.0", config.Port))
+            //using (var server = new HttpServer(config.Port)) //TODO 
+            using (var server = new HttpServer("0.0.0.0", config.Port))
             {
                 #region Request Received
-                
+
 
                 server.RequestReceived += (s, e) =>
                 {
@@ -62,7 +63,7 @@ namespace ClientApp
                                     e.Response.Cookies.Add(cookie);
                                 }
 
-                                if(result.Redirect == null)
+                                if (result.Redirect == null)
                                 {
                                     writer.Write(result.Content);
                                 }
@@ -70,7 +71,7 @@ namespace ClientApp
                                 {
                                     e.Response.Redirect(result.Redirect);
                                 }
-                                
+
                             }
                         }
                         else if (File.Exists(filePath)) // When requested file exists
@@ -133,20 +134,20 @@ namespace ClientApp
 
                 //Process.Start(String.Format("http://{0}/", server.EndPoint));
 
-                Console.WriteLine("Press any key to stop server...");
-                Console.ReadKey();
+                //Console.WriteLine("Press any key to stop server...");
+                //Console.ReadKey();
 
-                server.Stop();
+                //server.Stop();
 
-                //while (true) { }
+                while (true) { }
 
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
+                //Console.WriteLine("Press any key to exit...");
+                //Console.ReadKey();
 
                 ///// config.json App1 Physical Path
                 ///// /home/george/ServerFramework/src/App1/bin/Debug
                 ///// C:\\Users\\carme\\Desktop\\webadv\\ServerFramework\\src\\App1\\bin\\Debug
-                
+
                 ///// App1Config.json App1 Database Path
                 ///// /home/george/ServerFramework/db/App1db.sqlite
                 ///// C:\\Users\\carme\\Desktop\\webadv\\ServerFramework\\db\\App1db.sqlite

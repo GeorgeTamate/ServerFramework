@@ -6,5 +6,5 @@
     "about.html"
   ],
   "connectionString": "",
-  "dbPath": "C:\\Users\\carme\\Desktop\\webadv\\ServerFramework\\db\\App1db.sqlite"
+  "dbPath": "/home/george/ServerFramework/db/App1db.sqlite"
 }
