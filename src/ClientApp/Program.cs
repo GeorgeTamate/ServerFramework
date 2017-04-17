@@ -24,14 +24,13 @@ namespace ClientApp
 
             startupApps.LoadApps(config);
 
-            //Console.WriteLine("Press any key to start server...");//
-            //Console.ReadKey();
+            Console.WriteLine("Press any key to start server...");//
+            Console.ReadKey();
 
-            //using (var server = new HttpServer(config.Port)) //TODO 
-            using (var server = new HttpServer("0.0.0.0", config.Port))
+            using (var server = new HttpServer(config.Port)) //TODO using (var server = new HttpServer("0.0.0.0", config.Port))
             {
                 #region Request Received
-
+                
 
                 server.RequestReceived += (s, e) =>
                 {
@@ -42,7 +41,6 @@ namespace ClientApp
                     if (!e.Request.Path.Equals("/favicon.ico")) // when not favicon.ico
                     {
                         result = (ActionResult)startupApps.InvokeApp(e.Request, e.Context);
-
                         if (result != null)
                         {
                             using (var writer = new StreamWriter(e.Response.OutputStream))
@@ -64,16 +62,29 @@ namespace ClientApp
                                     e.Response.Cookies.Add(cookie);
                                 }
 
-                                writer.Write(result.Content);
+                                if(result.Redirect == null)
+                                {
+                                    writer.Write(result.Content);
+                                }
+                                else
+                                {
+                                    e.Response.Redirect(result.Redirect);
+                                }
+                                
                             }
                         }
-                        else if (e.Request.Path.Equals("/login") && e.Request.HttpMethod.Equals("POST"))
+                        else if (File.Exists(filePath)) // When requested file exists
                         {
-                            Console.WriteLine(e.Request.Form.Get("username"));
-                            Console.WriteLine(e.Request.Form.Get("password"));
-                            using (var writer = new StreamWriter(e.Response.OutputStream))
+                            using (var stream = File.Open(filePath, FileMode.Open))
                             {
-                                writer.Write("LOGIN!");
+                                e.Response.ContentType = GetMimeType(Path.GetExtension(e.Request.Path));
+                                byte[] buffer = new byte[4096];
+                                int read;
+
+                                while ((read = stream.Read(buffer, 0, buffer.Length)) != 0)
+                                {
+                                    e.Response.OutputStream.Write(buffer, 0, read);
+                                }
                             }
                         }
                         else if (e.Request.Path.Equals("/"))
@@ -122,20 +133,20 @@ namespace ClientApp
 
                 //Process.Start(String.Format("http://{0}/", server.EndPoint));
 
-                //Console.WriteLine("Press any key to stop server...");
-                //Console.ReadKey();
+                Console.WriteLine("Press any key to stop server...");
+                Console.ReadKey();
 
-                //server.Stop();
+                server.Stop();
 
-                while (true) { }
+                //while (true) { }
 
-                //Console.WriteLine("Press any key to exit...");
-                //Console.ReadKey();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
 
                 ///// config.json App1 Physical Path
                 ///// /home/george/ServerFramework/src/App1/bin/Debug
                 ///// C:\\Users\\carme\\Desktop\\webadv\\ServerFramework\\src\\App1\\bin\\Debug
-
+                
                 ///// App1Config.json App1 Database Path
                 ///// /home/george/ServerFramework/db/App1db.sqlite
                 ///// C:\\Users\\carme\\Desktop\\webadv\\ServerFramework\\db\\App1db.sqlite

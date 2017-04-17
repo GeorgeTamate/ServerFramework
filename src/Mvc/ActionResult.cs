@@ -10,6 +10,7 @@ namespace Mvc
             ContentType = "text/html";
             Content = null;
             Cookie = null;
+            Redirect = null;
         }
 
         protected ActionResult(string contentType) : this()
@@ -32,5 +33,7 @@ namespace Mvc
         public string Content { get; set; }
 
         public object Cookie { get; set; }
+
+        public string Redirect { get; set; }
     }
 }

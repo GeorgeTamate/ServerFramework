@@ -1,0 +1,34 @@
+<h1>Create</h1>
+
+<form action="createpost" method="POST" id="createform">
+    URL to shorten: <input type="text" name="link">
+    <br>
+    <input type="text" id="captchatext" disabled>
+    <br> Captcha: <input type="text" id="CaptchaEnter" size="20" maxlength="6" />
+    <br>
+    <input onClick="check()" type="button" value="Shorten URL">
+</form>
+
+<script>
+    // Do not remove this (it's just a comment and won't effect the functions)
+    // SimpleCaptcha v1.0 © Anudeep Tubati
+    function ChangeCaptcha() {
+        var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+        var string_length = 6;
+        var ChangeCaptcha = '';
+        for (var i = 0; i < string_length; i++) {
+            var rnum = Math.floor(Math.random() * chars.length);
+            ChangeCaptcha += chars.substring(rnum, rnum + 1);
+        }
+        document.getElementById('captchatext').value = ChangeCaptcha;
+    }
+    function check() {
+        if (document.getElementById('CaptchaEnter').value == document.getElementById('captchatext').value) {
+            document.getElementById("createform").submit();
+        }
+        else {
+            alert('The CAPTCHA input is invalid.');
+        }
+    }
+
+</script>

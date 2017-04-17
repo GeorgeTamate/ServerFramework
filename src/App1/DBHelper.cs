@@ -87,6 +87,66 @@ namespace App1
             }
         }
 
+        public dynamic GetUser(string username)
+        {
+            dynamic user = null;
+            lock (_mutex)
+            {
+                using (SQLiteConnection conn = new SQLiteConnection(_connString))
+                {
+                    conn.Open();
+                    string sql = "select * from users where username='" + username + "'";
+                    using (SQLiteCommand command = new SQLiteCommand(sql, conn))
+                    {
+                        using (SQLiteDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                user = new
+                                {
+                                    username = (string)reader["username"],
+                                    password = (string)reader["password"],
+                                    secret = (string)reader["secret"]
+                                };
+                                Console.WriteLine("   + App1 | User: {0}", user);
+                            }
+                        }
+                    }
+                }
+            }
+            return user;
+        }
+
+        public dynamic GetUserBySecret(string secret)
+        {
+            dynamic user = null;
+            lock (_mutex)
+            {
+                using (SQLiteConnection conn = new SQLiteConnection(_connString))
+                {
+                    conn.Open();
+                    string sql = "select * from users where secret='" + secret + "'";
+                    using (SQLiteCommand command = new SQLiteCommand(sql, conn))
+                    {
+                        using (SQLiteDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                user = new
+                                {
+                                    username = (string)reader["username"],
+                                    password = (string)reader["password"],
+                                    secret = (string)reader["secret"]
+                                };
+                                Console.WriteLine("   + App1 | User: {0}", user);
+                            }
+                        }
+                    }
+                }
+            }
+            return user;
+        }
+
         public void CreateLink(string shortlink, string link, string username)
         {
             lock (_mutex)
@@ -128,34 +188,20 @@ namespace App1
             return link;
         }
 
-        public dynamic GetUser(string username)
+        public void DeleteLink(string shortlink, string username)
         {
-            dynamic user = null;
             lock (_mutex)
             {
                 using (SQLiteConnection conn = new SQLiteConnection(_connString))
                 {
                     conn.Open();
-                    string sql = "select * from users where username='" + username + "'";
-                    using (SQLiteCommand command = new SQLiteCommand(sql, conn))
-                    {
-                        using (SQLiteDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                user = new
-                                {
-                                    username = (string)reader["username"],
-                                    password = (string)reader["password"],
-                                    secret = (string)reader["secret"]
-                                };
-                                Console.WriteLine("   + App1 | User: {0}", user);
-                            }
-                        }
-                    }
+
+                    string sql = "delete from links where shortlink='" + shortlink + "' and username='" + username + "'";
+                    SQLiteCommand command = new SQLiteCommand(sql, conn);
+                    command.ExecuteNonQuery();
+                    Console.WriteLine("   + App1 | Done deleting link.");
                 }
             }
-            return user;
         }
 
     }

@@ -30,16 +30,12 @@ namespace App1
 
             Console.WriteLine("   + Path: {0}", path);
 
+            var redir = new ShortController().Redirect(path, _db);
+            if (redir.Redirect != null)
+                return redir;
+
             var router = new Router(path);
             var result = router.CallAction(GetType(), request, context, _db);
-
-            if (result == null)
-                return new HomeController().Index();
-
-            //test
-            var homeController = new HomeController();
-            homeController.Context = context;
-            homeController.Request = request;
 
             return result;
         }
